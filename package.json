@@ -29,7 +29,10 @@
 		"nanoid": "^5.1.9",
 		"react": "^19.2.5",
 		"react-dom": "^19.2.5",
-		"rehype-sanitize": "^6.0.0"
+		"rehype-parse": "^9.0.1",
+		"rehype-sanitize": "^6.0.0",
+		"rehype-stringify": "^10.0.1",
+		"unified": "^11.0.5"
 	},
 	"devDependencies": {
 		"@astrojs/react": "^5.0.4",

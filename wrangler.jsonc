@@ -13,6 +13,9 @@
 	"observability": {
 		"enabled": true
 	},
+	"vars": {
+		"PUBLIC_BASE_URL": "http://localhost:4321"
+	},
 	"d1_databases": [
 		{
 			"binding": "DB",

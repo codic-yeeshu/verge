@@ -24,12 +24,15 @@ export async function cachedAI<T = unknown>(
 	const cached = await env.RENDER_CACHE.get(key);
 	if (cached !== null) {
 		try {
-			return JSON.parse(cached) as T;
+			const parsed = JSON.parse(cached) as T;
+			console.log('[ai-cache] HIT', key);
+			return parsed;
 		} catch {
-			// fall through and recompute on parse failure
+			console.warn('[ai-cache] CORRUPT', key);
 		}
 	}
 
+	console.log('[ai-cache] MISS', key);
 	const result = (await env.AI.run(model as Parameters<Ai['run']>[0], input as never)) as T;
 	await env.RENDER_CACHE.put(key, JSON.stringify(result), { expirationTtl: TTL_SECONDS });
 	return result;

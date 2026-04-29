@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '../db/client';
 import { posts } from '../db/schema';
 import { cachedAI } from '../lib/ai-cache';
+import { invalidatePostCache } from '../lib/post-cache';
 
 const LLAMA = '@cf/meta/llama-3.1-8b-instruct';
 const BODY_SNIPPET_CHARS = 2000;
@@ -79,7 +80,7 @@ async function processPost(postId: string, env: Env): Promise<void> {
 		})
 		.where(eq(posts.id, postId));
 
-	// TODO Phase 5: caches.default.delete(`https://<host>/post/${post.slug}`) once we know the host (read from a binding/secret).
+	await invalidatePostCache(post.slug, env.PUBLIC_BASE_URL);
 
 	await env.JOBS.send({ type: 'send_newsletter', postId });
 }
