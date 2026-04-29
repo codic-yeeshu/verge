@@ -1,3 +1,5 @@
+import { logEvent } from './log';
+
 const TTL_SECONDS = 24 * 60 * 60;
 
 type AiCacheEnv = {
@@ -26,6 +28,7 @@ export async function cachedAI<T = unknown>(
 		try {
 			const parsed = JSON.parse(cached) as T;
 			console.log('[ai-cache] HIT', key);
+			logEvent('ai_call', { model, ms: 0, cached: true });
 			return parsed;
 		} catch {
 			console.warn('[ai-cache] CORRUPT', key);
@@ -33,7 +36,10 @@ export async function cachedAI<T = unknown>(
 	}
 
 	console.log('[ai-cache] MISS', key);
+	const start = Date.now();
 	const result = (await env.AI.run(model as Parameters<Ai['run']>[0], input as never)) as T;
+	const ms = Date.now() - start;
+	logEvent('ai_call', { model, ms, cached: false });
 	await env.RENDER_CACHE.put(key, JSON.stringify(result), { expirationTtl: TTL_SECONDS });
 	return result;
 }

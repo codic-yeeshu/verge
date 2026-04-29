@@ -4,6 +4,7 @@ import { nanoid } from 'nanoid';
 import { getDb } from '../db/client';
 import { comments, users } from '../db/schema';
 import { SESSION_COOKIE, validateSession } from '../lib/auth';
+import { logEvent } from '../lib/log';
 
 const RECENT_LIMIT = 50;
 const COMMENT_BODY_MAX = 2000;
@@ -114,6 +115,7 @@ export class CommentRoom extends DurableObject<Env> {
 			};
 			this.appendRecent(comment);
 			this.broadcast({ type: 'new_comment', comment });
+			logEvent('comment_posted', { postId, userId: att.userId, commentId: id });
 			return;
 		}
 

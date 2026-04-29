@@ -7,6 +7,7 @@ import CommentRoom from '../../components/CommentRoom';
 import { getDb } from '../../db/client';
 import { posts, users } from '../../db/schema';
 import { renderMarkdown } from '../../lib/markdown';
+import { logEvent } from '../../lib/log';
 import '../../styles/global.css';
 
 const slug = Astro.params.slug;
@@ -33,6 +34,9 @@ const rows = await db
 
 const post = rows[0];
 if (!post) return new Response('Not found', { status: 404 });
+
+const cfCountry = (Astro.request as { cf?: { country?: string } }).cf?.country ?? null;
+logEvent('post_view', { postId: post.id, slug, country: cfCountry });
 
 const bodyHtml = await renderMarkdown(post.bodyMd);
 
@@ -63,6 +67,7 @@ const isoDate = post.publishedAt ? new Date(post.publishedAt).toISOString() : ''
 			<a href="/" class="brand">Verge</a>
 			<nav><a href="/">Home</a></nav>
 		</header>
+		<div id="geo-banner" class="geo-banner geo-banner-post"></div>
 		<article class="post-article">
 			<header class="post-head">
 				<h1 class="post-title">{post.title}</h1>
@@ -110,6 +115,21 @@ const isoDate = post.publishedAt ? new Date(post.publishedAt).toISOString() : ''
 					if (!user) return;
 					const link = document.getElementById('post-edit-link');
 					if (link && user.id === link.dataset.authorId) link.classList.add('visible');
+				} catch {}
+			})();
+			(async () => {
+				const banner = document.getElementById('geo-banner');
+				if (!banner) return;
+				try {
+					const res = await fetch('/api/geo');
+					if (!res.ok) return;
+					const { country, city } = await res.json();
+					let where = 'localhost';
+					if (city && country) where = `${city}, ${country}`;
+					else if (country) where = country;
+					else if (city) where = city;
+					banner.textContent = `📍 Reading from ${where}`;
+					banner.classList.add('visible');
 				} catch {}
 			})();
 		</script>

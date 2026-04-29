@@ -1,8 +1,11 @@
 import { Hono } from 'hono';
 import { type AuthVariables, authMiddleware } from '../lib/auth';
+import { logEvent } from '../lib/log';
 import authRoutes from './routes/auth';
+import geoRoutes from './routes/geo';
 import postsRoutes from './routes/posts';
 import roomRoutes from './routes/room';
+import subscribeRoutes from './routes/subscribe';
 import uploadRoutes from './routes/upload';
 
 export type Bindings = {
@@ -15,6 +18,8 @@ export type Bindings = {
 	ASSETS: Fetcher;
 	GITHUB_CLIENT_ID: string;
 	GITHUB_CLIENT_SECRET: string;
+	PUBLIC_BASE_URL: string;
+	RESEND_API_KEY?: string;
 };
 
 const app = new Hono<{ Bindings: Bindings; Variables: AuthVariables }>();
@@ -29,5 +34,17 @@ app.route('/api/auth', authRoutes);
 app.route('/api/posts', postsRoutes);
 app.route('/api/upload', uploadRoutes);
 app.route('/api/room', roomRoutes);
+app.route('/api/geo', geoRoutes);
+app.route('/api/subscribe', subscribeRoutes);
+
+app.onError((err, c) => {
+	logEvent('error', {
+		path: new URL(c.req.url).pathname,
+		method: c.req.method,
+		message: err instanceof Error ? err.message : String(err),
+		stack: err instanceof Error ? err.stack : undefined,
+	});
+	return c.json({ error: 'internal_error' }, 500);
+});
 
 export default app;

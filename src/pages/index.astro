@@ -1,4 +1,6 @@
 ---
+export const prerender = false;
+
 import { env } from 'cloudflare:workers';
 import { desc, eq } from 'drizzle-orm';
 import { getDb } from '../db/client';
@@ -22,6 +24,14 @@ const list = await db
 	.limit(20);
 
 const user = Astro.locals.user;
+const geo = Astro.locals.geo;
+
+function geoLabel(g: typeof geo): string {
+	if (!g.country && !g.city) return 'localhost';
+	if (g.city && g.country) return `${g.city}, ${g.country}`;
+	return g.country ?? g.city ?? 'localhost';
+}
+const where = geoLabel(geo);
 
 const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 ---
@@ -52,6 +62,7 @@ const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric
 			</nav>
 		</header>
 		<main>
+			<div class="geo-banner">📍 Reading from {where}</div>
 			{
 				list.length === 0 ? (
 					<p class="empty">No posts yet. {user ? <a href="/editor">Write the first one →</a> : 'Sign in to write the first one.'}</p>
@@ -71,5 +82,55 @@ const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric
 				)
 			}
 		</main>
+		<footer class="site-footer">
+			<form id="subscribe-form" class="subscribe-form">
+				<label for="subscribe-email">Get notified about new posts</label>
+				<div class="subscribe-row">
+					<input
+						id="subscribe-email"
+						type="email"
+						name="email"
+						placeholder="you@example.com"
+						required
+						autocomplete="email"
+					/>
+					<button type="submit">Subscribe</button>
+				</div>
+				<p id="subscribe-status" class="subscribe-status" aria-live="polite"></p>
+			</form>
+		</footer>
+		<script is:inline>
+			(() => {
+				const form = document.getElementById('subscribe-form');
+				const status = document.getElementById('subscribe-status');
+				if (!form || !status) return;
+				form.addEventListener('submit', async (e) => {
+					e.preventDefault();
+					const data = new FormData(form);
+					const email = (data.get('email') ?? '').toString();
+					status.textContent = 'Subscribing…';
+					status.className = 'subscribe-status';
+					try {
+						const res = await fetch('/api/subscribe', {
+							method: 'POST',
+							headers: { 'content-type': 'application/json' },
+							body: JSON.stringify({ email }),
+						});
+						const body = await res.json().catch(() => ({}));
+						if (res.ok) {
+							status.textContent = 'Subscribed. Welcome aboard.';
+							status.className = 'subscribe-status subscribe-status-ok';
+							form.reset();
+						} else {
+							status.textContent = body.error === 'invalid_email' ? 'Please enter a valid email.' : 'Something went wrong.';
+							status.className = 'subscribe-status subscribe-status-err';
+						}
+					} catch {
+						status.textContent = 'Network error. Try again.';
+						status.className = 'subscribe-status subscribe-status-err';
+					}
+				});
+			})();
+		</script>
 	</body>
 </html>

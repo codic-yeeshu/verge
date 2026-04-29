@@ -14,7 +14,7 @@
 		"enabled": true
 	},
 	"vars": {
-		"PUBLIC_BASE_URL": "http://localhost:4321"
+		"PUBLIC_BASE_URL": "https://verge.yeeshu.workers.dev"
 	},
 	"d1_databases": [
 		{
@@ -67,7 +67,9 @@
 	"migrations": [
 		{
 			"tag": "v1",
-			"new_sqlite_classes": ["CommentRoom"]
+			"new_sqlite_classes": [
+				"CommentRoom"
+			]
 		}
 	]
 }

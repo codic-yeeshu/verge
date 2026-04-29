@@ -4,9 +4,12 @@ import honoApp from './api';
 import { getDb } from './db/client';
 import { SESSION_COOKIE, validateSession } from './lib/auth';
 import { POST_CACHE_CONTROL, defaultCache } from './lib/post-cache';
+import type { GeoInfo } from './env';
 
 export const onRequest = defineMiddleware(async (context, next) => {
 	const { pathname } = new URL(context.request.url);
+
+	context.locals.geo = readGeo(context.request);
 
 	if (pathname.startsWith('/api/')) {
 		return honoApp.fetch(context.request, env, context.locals.cfContext);
@@ -26,6 +29,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 	return next();
 });
+
+function readGeo(request: Request): GeoInfo {
+	const cf = (request as { cf?: { country?: string; city?: string; timezone?: string } }).cf;
+	return {
+		country: cf?.country ?? null,
+		city: cf?.city ?? null,
+		timezone: cf?.timezone ?? null,
+	};
+}
 
 async function cachePostPage(
 	context: Parameters<Parameters<typeof defineMiddleware>[0]>[0],

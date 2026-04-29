@@ -124,6 +124,91 @@ main {
 	padding: 64px 0;
 }
 
+.geo-banner {
+	font-size: 13px;
+	color: var(--muted);
+	background: var(--info-bg);
+	color: var(--info-fg);
+	padding: 8px 14px;
+	border-radius: 999px;
+	display: inline-block;
+	margin: 0 0 24px;
+}
+
+.geo-banner-post {
+	max-width: 720px;
+	margin: 24px auto 0;
+	display: none;
+	padding: 6px 12px;
+}
+
+.geo-banner-post.visible {
+	display: inline-block;
+	margin: 24px 24px 0;
+}
+
+.site-footer {
+	max-width: 880px;
+	margin: 48px auto 64px;
+	padding: 24px;
+	border-top: 1px solid var(--border);
+}
+
+.subscribe-form label {
+	display: block;
+	font-size: 14px;
+	color: var(--muted);
+	margin-bottom: 8px;
+}
+
+.subscribe-row {
+	display: flex;
+	gap: 8px;
+	max-width: 480px;
+}
+
+.subscribe-form input[type='email'] {
+	flex: 1;
+	border: 1px solid var(--border);
+	background: var(--surface);
+	color: var(--text);
+	border-radius: 8px;
+	padding: 10px 12px;
+	font: inherit;
+	font-size: 14px;
+}
+
+.subscribe-form input[type='email']:focus {
+	outline: none;
+	border-color: var(--brand);
+}
+
+.subscribe-form button {
+	background: var(--brand);
+	color: var(--brand-fg);
+	border: none;
+	border-radius: 8px;
+	padding: 10px 16px;
+	font: inherit;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.subscribe-status {
+	margin: 8px 0 0;
+	font-size: 13px;
+	min-height: 18px;
+	color: var(--muted);
+}
+
+.subscribe-status-ok {
+	color: var(--success);
+}
+
+.subscribe-status-err {
+	color: var(--error);
+}
+
 .posts {
 	list-style: none;
 	padding: 0;
