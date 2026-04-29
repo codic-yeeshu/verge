@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import { type AuthVariables, authMiddleware } from '../lib/auth';
+import authRoutes from './routes/auth';
 
 export type Bindings = {
 	DB: D1Database;
@@ -8,10 +10,18 @@ export type Bindings = {
 	AI: Ai;
 	COMMENTS: DurableObjectNamespace;
 	ASSETS: Fetcher;
+	GITHUB_CLIENT_ID: string;
+	GITHUB_CLIENT_SECRET: string;
 };
 
-const app = new Hono<{ Bindings: Bindings }>();
+const app = new Hono<{ Bindings: Bindings; Variables: AuthVariables }>();
+
+app.use('*', authMiddleware);
 
 app.get('/api/health', (c) => c.json({ ok: true, time: Date.now() }));
+
+app.get('/api/me', (c) => c.json({ user: c.get('user') }));
+
+app.route('/api/auth', authRoutes);
 
 export default app;
