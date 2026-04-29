@@ -10,9 +10,47 @@
 	margin: 0;
 }
 
+html {
+	scroll-behavior: smooth;
+}
+
 html,
 body {
 	height: 100%;
+}
+
+/* Single focus ring across every interactive element. The default browser
+   outline is suppressed only on mouse focus (:focus, not :focus-visible) so
+   keyboard users still see a clear ring. */
+:focus {
+	outline: none;
+}
+
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+	border-radius: inherit;
+}
+
+::selection {
+	background: var(--accent-soft);
+	color: var(--accent-ink);
+}
+
+/* Respect users who don't want motion: kill long animations and transitions,
+   stop the html-level smooth scroll. Targeted, not nuclear. */
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
 }
 
 body {
@@ -111,11 +149,6 @@ a {
 
 a:hover {
 	color: var(--accent-hover);
-}
-
-::selection {
-	background: var(--accent-soft);
-	color: var(--accent-ink);
 }
 
 button {

@@ -1,5 +1,6 @@
 ---
 import ShareButton from './ShareButton';
+import { relativeTime } from '../lib/time';
 
 interface Post {
 	id: string;
@@ -40,22 +41,6 @@ if (post.tagsJson) {
 const wordCount = post.bodyMd.trim().split(/\s+/).filter(Boolean).length;
 const readMinutes = Math.max(1, Math.round(wordCount / 200));
 
-function relativeTime(ts: number): string {
-	const diffMs = Date.now() - ts;
-	const seconds = Math.max(0, Math.floor(diffMs / 1000));
-	if (seconds < 45) return 'just now';
-	const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
-	const minutes = Math.floor(seconds / 60);
-	if (minutes < 60) return rtf.format(-minutes, 'minute');
-	const hours = Math.floor(minutes / 60);
-	if (hours < 24) return rtf.format(-hours, 'hour');
-	const days = Math.floor(hours / 24);
-	if (days < 30) return rtf.format(-days, 'day');
-	const months = Math.floor(days / 30);
-	if (months < 12) return rtf.format(-months, 'month');
-	return rtf.format(-Math.floor(months / 12), 'year');
-}
-
 const timeLabel = post.publishedAt ? relativeTime(post.publishedAt) : '';
 const initial = (post.title.match(/\S/)?.[0] ?? '?').toUpperCase();
 // Direct R2 proxy. `/cdn-cgi/image/...` resizing is a custom-domain + paid
@@ -67,11 +52,17 @@ const coverSrc = post.coverR2Key ? `/api/r2/${post.coverR2Key}` : null;
 	{
 		coverSrc ? (
 			<div class="post-card-cover">
-				<img src={coverSrc} alt="" loading="lazy" />
+				<img
+					src={coverSrc}
+					alt=""
+					loading="lazy"
+					decoding="async"
+					transition:name={`cover-${post.id}`}
+				/>
 			</div>
 		) : (
 			<div class="post-card-cover post-card-cover-placeholder" aria-hidden="true">
-				<span class="post-card-initial">{initial}</span>
+				<span class="post-card-initial" transition:name={`cover-${post.id}`}>{initial}</span>
 			</div>
 		)
 	}

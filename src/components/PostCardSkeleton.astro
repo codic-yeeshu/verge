@@ -1,0 +1,139 @@
+---
+// Mirrors PostCard.astro's geometry. Drop into any feed grid that's waiting
+// on data — currently used by /404 and available for future client-fetched
+// pagination. The shimmer animation is gated behind prefers-reduced-motion.
+---
+
+<article class="post-card-skeleton" aria-hidden="true">
+	<div class="post-card-skeleton-cover skeleton-shape"></div>
+	<div class="post-card-skeleton-body">
+		<div class="post-card-skeleton-tags">
+			<span class="skeleton-shape"></span>
+			<span class="skeleton-shape"></span>
+		</div>
+		<div class="skeleton-shape post-card-skeleton-title-1"></div>
+		<div class="skeleton-shape post-card-skeleton-title-2"></div>
+		<div class="post-card-skeleton-summary">
+			<div class="skeleton-shape"></div>
+			<div class="skeleton-shape"></div>
+			<div class="skeleton-shape post-card-skeleton-summary-3"></div>
+		</div>
+		<div class="post-card-skeleton-footer">
+			<div class="skeleton-shape post-card-skeleton-avatar"></div>
+			<div class="skeleton-shape post-card-skeleton-meta"></div>
+		</div>
+	</div>
+</article>
+
+<style is:global>
+	.post-card-skeleton {
+		display: flex;
+		flex-direction: column;
+		background: var(--bg-surface);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		overflow: hidden;
+	}
+
+	.post-card-skeleton-cover {
+		aspect-ratio: 16 / 9;
+		width: 100%;
+	}
+
+	.post-card-skeleton-body {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+		padding: var(--space-5);
+		flex: 1;
+	}
+
+	.post-card-skeleton-tags {
+		display: flex;
+		gap: 6px;
+	}
+
+	.post-card-skeleton-tags .skeleton-shape {
+		height: 22px;
+		width: 60px;
+		border-radius: var(--radius-sm);
+	}
+
+	.post-card-skeleton-title-1 {
+		height: 22px;
+		width: 90%;
+		border-radius: var(--radius-sm);
+	}
+
+	.post-card-skeleton-title-2 {
+		height: 22px;
+		width: 60%;
+		border-radius: var(--radius-sm);
+	}
+
+	.post-card-skeleton-summary {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.post-card-skeleton-summary .skeleton-shape {
+		height: 14px;
+		border-radius: var(--radius-sm);
+	}
+
+	.post-card-skeleton-summary-3 {
+		width: 70% !important;
+	}
+
+	.post-card-skeleton-footer {
+		margin-top: auto;
+		padding-top: var(--space-3);
+		border-top: 1px solid var(--border-subtle);
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.post-card-skeleton-avatar {
+		width: 20px;
+		height: 20px;
+		border-radius: var(--radius-full);
+		flex-shrink: 0;
+	}
+
+	.post-card-skeleton-meta {
+		height: 12px;
+		width: 60%;
+		border-radius: var(--radius-sm);
+	}
+
+	.skeleton-shape {
+		display: block;
+		background: var(--bg-surface-2);
+		position: relative;
+		overflow: hidden;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.skeleton-shape::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: linear-gradient(
+				90deg,
+				transparent,
+				color-mix(in srgb, var(--ink-1) 4%, transparent),
+				transparent
+			);
+			transform: translateX(-100%);
+			animation: skeleton-shimmer 1.4s ease-in-out infinite;
+		}
+	}
+
+	@keyframes skeleton-shimmer {
+		100% {
+			transform: translateX(100%);
+		}
+	}
+</style>

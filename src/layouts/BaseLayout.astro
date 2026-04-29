@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from 'astro:transitions';
 import Nav from '../components/Nav.astro';
 import '../styles/tokens.css';
 import '../styles/base.css';
@@ -45,10 +46,103 @@ const { title, description } = Astro.props;
 				}
 			})();
 		</script>
+
+		<ClientRouter />
 	</head>
 	<body>
 		<Nav />
 		<slot />
+
+		<button
+			id="shortcuts-toggle"
+			class="shortcuts-toggle"
+			type="button"
+			aria-label="Keyboard shortcuts"
+			aria-haspopup="dialog"
+		>?</button>
+		<div
+			id="shortcuts-popover"
+			class="shortcuts-popover"
+			role="dialog"
+			aria-labelledby="shortcuts-title"
+			hidden
+		>
+			<h3 id="shortcuts-title">Keyboard shortcuts</h3>
+			<dl>
+				<dt><kbd>/</kbd></dt><dd>Focus search</dd>
+				<dt><kbd>t</kbd></dt><dd>Toggle theme</dd>
+				<dt><kbd>n</kbd></dt><dd>Write a new post</dd>
+				<dt><kbd>?</kbd></dt><dd>Show this menu</dd>
+			</dl>
+		</div>
+
+		<script is:inline>
+			(() => {
+				const popover = document.getElementById('shortcuts-popover');
+				const toggle = document.getElementById('shortcuts-toggle');
+				if (!popover || !toggle) return;
+
+				const open = () => {
+					popover.hidden = false;
+					toggle.setAttribute('aria-expanded', 'true');
+				};
+				const close = () => {
+					popover.hidden = true;
+					toggle.setAttribute('aria-expanded', 'false');
+				};
+				const isTyping = (el) => {
+					if (!(el instanceof HTMLElement)) return false;
+					const tag = el.tagName.toLowerCase();
+					return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable;
+				};
+
+				toggle.addEventListener('click', () => {
+					popover.hidden ? open() : close();
+				});
+
+				document.addEventListener('click', (e) => {
+					if (popover.hidden) return;
+					if (popover.contains(e.target) || toggle.contains(e.target)) return;
+					close();
+				});
+
+				document.addEventListener('keydown', (e) => {
+					if (e.key === 'Escape' && !popover.hidden) {
+						close();
+						return;
+					}
+					if (isTyping(e.target)) return;
+					if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+					switch (e.key) {
+						case '/': {
+							e.preventDefault();
+							const search = document.querySelector('.nav-search-input');
+							if (search instanceof HTMLInputElement) search.focus();
+							break;
+						}
+						case 't': {
+							e.preventDefault();
+							const cur = document.documentElement.dataset.theme;
+							const next = cur === 'dark' ? 'light' : 'dark';
+							document.documentElement.dataset.theme = next;
+							try { localStorage.setItem('theme', next); } catch {}
+							break;
+						}
+						case 'n': {
+							e.preventDefault();
+							window.location.href = '/editor';
+							break;
+						}
+						case '?': {
+							e.preventDefault();
+							popover.hidden ? open() : close();
+							break;
+						}
+					}
+				});
+			})();
+		</script>
 	</body>
 </html>
 
@@ -78,5 +172,89 @@ const { title, description } = Astro.props;
 	.theme-toggle:focus-visible {
 		outline: 2px solid var(--accent);
 		outline-offset: 2px;
+	}
+
+	/* ── Keyboard shortcuts ─────────────────────────── */
+	.shortcuts-toggle {
+		position: fixed;
+		bottom: var(--space-6);
+		left: var(--space-6);
+		width: 32px;
+		height: 32px;
+		border-radius: var(--radius-full);
+		background: var(--bg-surface);
+		border: 1px solid var(--border-subtle);
+		color: var(--ink-3);
+		font-family: 'Fraunces', Georgia, serif;
+		font-size: 14px;
+		font-weight: 600;
+		cursor: pointer;
+		z-index: 80;
+		box-shadow: var(--shadow-sm);
+		transition:
+			color var(--duration-fast) var(--ease-out),
+			border-color var(--duration-fast) var(--ease-out);
+	}
+
+	.shortcuts-toggle:hover {
+		color: var(--ink-1);
+		border-color: var(--border-strong);
+	}
+
+	.shortcuts-popover {
+		position: fixed;
+		bottom: calc(var(--space-6) + 40px);
+		left: var(--space-6);
+		min-width: 240px;
+		padding: var(--space-4);
+		background: var(--bg-elevated);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-lg);
+		z-index: 90;
+	}
+
+	.shortcuts-popover h3 {
+		margin: 0 0 var(--space-3);
+		font-family: 'Fraunces', Georgia, serif;
+		font-weight: 500;
+		font-size: var(--text-sm);
+		color: var(--ink-1);
+		font-variation-settings: 'opsz' 18;
+	}
+
+	.shortcuts-popover dl {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: var(--space-2) var(--space-4);
+		margin: 0;
+		font-size: var(--text-xs);
+	}
+
+	.shortcuts-popover dt {
+		display: flex;
+		align-items: center;
+	}
+
+	.shortcuts-popover dd {
+		margin: 0;
+		color: var(--ink-2);
+		display: flex;
+		align-items: center;
+	}
+
+	.shortcuts-popover kbd {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 22px;
+		height: 22px;
+		padding: 0 6px;
+		background: var(--bg-surface-2);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-sm);
+		font-family: 'JetBrains Mono', ui-monospace, monospace;
+		font-size: 11px;
+		color: var(--ink-1);
 	}
 </style>

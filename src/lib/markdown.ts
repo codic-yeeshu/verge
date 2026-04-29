@@ -26,9 +26,16 @@ function wrapCaptionedImages(html: string): string {
 	return wrapped.replace(figureInParaRe, '$1');
 }
 
+// Tag every <img> with `loading="lazy" decoding="async"` after sanitization.
+// rehype-sanitize's default schema strips unrecognized attrs, so we add them
+// back at the very end rather than fighting the schema.
+function lazyLoadImages(html: string): string {
+	return html.replace(/<img\b/g, '<img loading="lazy" decoding="async"');
+}
+
 export async function renderMarkdown(md: string): Promise<string> {
 	const rawHtml = marked.parse(md, { async: false }) as string;
 	const withFigures = wrapCaptionedImages(rawHtml);
 	const file = await sanitizer.process(withFigures);
-	return String(file);
+	return lazyLoadImages(String(file));
 }

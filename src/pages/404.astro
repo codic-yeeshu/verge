@@ -1,0 +1,51 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Not found · Verge">
+	<main class="not-found">
+		<p class="not-found-numeral" aria-hidden="true">404</p>
+		<p class="not-found-line">This post drifted off the edge.</p>
+		<a href="/" class="not-found-link">← Back home</a>
+	</main>
+</BaseLayout>
+
+<style is:global>
+	.not-found {
+		max-width: 540px;
+		margin: 0 auto;
+		padding: var(--space-20) var(--space-6);
+		text-align: center;
+	}
+
+	.not-found-numeral {
+		font-family: 'Fraunces', Georgia, serif;
+		font-weight: 500;
+		font-size: 64px;
+		line-height: 1;
+		color: var(--accent);
+		font-variation-settings: 'opsz' 144;
+		letter-spacing: -0.02em;
+		margin: 0 0 var(--space-5);
+	}
+
+	.not-found-line {
+		font-family: 'Source Serif 4', Georgia, serif;
+		font-style: italic;
+		font-size: var(--text-xl);
+		color: var(--ink-2);
+		margin: 0 0 var(--space-6);
+		font-variation-settings: 'opsz' 28;
+	}
+
+	.not-found-link {
+		font-size: var(--text-sm);
+		color: var(--ink-3);
+	}
+
+	.not-found-link:hover {
+		color: var(--accent);
+	}
+</style>

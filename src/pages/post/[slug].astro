@@ -10,6 +10,7 @@ import { getDb } from '../../db/client';
 import { posts, users } from '../../db/schema';
 import { logEvent } from '../../lib/log';
 import { renderMarkdown } from '../../lib/markdown';
+import { relativeTime } from '../../lib/time';
 
 const slug = Astro.params.slug;
 if (!slug) return new Response('Not found', { status: 404 });
@@ -61,22 +62,6 @@ if (post.tagsJson) {
 const wordCount = post.bodyMd.trim().split(/\s+/).filter(Boolean).length;
 const readMinutes = Math.max(1, Math.round(wordCount / 200));
 
-function relativeTime(ts: number): string {
-	const diffMs = Date.now() - ts;
-	const seconds = Math.max(0, Math.floor(diffMs / 1000));
-	if (seconds < 45) return 'just now';
-	const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
-	const minutes = Math.floor(seconds / 60);
-	if (minutes < 60) return rtf.format(-minutes, 'minute');
-	const hours = Math.floor(minutes / 60);
-	if (hours < 24) return rtf.format(-hours, 'hour');
-	const days = Math.floor(hours / 24);
-	if (days < 30) return rtf.format(-days, 'day');
-	const months = Math.floor(days / 30);
-	if (months < 12) return rtf.format(-months, 'month');
-	return rtf.format(-Math.floor(months / 12), 'year');
-}
-
 const timeLabel = post.publishedAt ? relativeTime(post.publishedAt) : '';
 const isoDate = post.publishedAt ? new Date(post.publishedAt).toISOString() : '';
 const coverSrc = post.coverR2Key ? `/api/r2/${post.coverR2Key}` : null;
@@ -84,8 +69,28 @@ const initial = (post.title.match(/\S/)?.[0] ?? '?').toUpperCase();
 ---
 
 <BaseLayout title={`${post.title} · Verge`} description={post.summary ?? undefined}>
-	<div class="post-hero" style={coverSrc ? `background-image: url(${coverSrc});` : undefined}>
-		{!coverSrc && <span class="post-hero-letter" aria-hidden="true">{initial}</span>}
+	<div id="reading-progress" class="reading-progress" aria-hidden="true"></div>
+
+	<div class="post-hero">
+		{
+			coverSrc ? (
+				<img
+					class="post-hero-img"
+					src={coverSrc}
+					alt=""
+					decoding="async"
+					transition:name={`cover-${post.id}`}
+				/>
+			) : (
+				<span
+					class="post-hero-letter"
+					aria-hidden="true"
+					transition:name={`cover-${post.id}`}
+				>
+					{initial}
+				</span>
+			)
+		}
 		<div class="post-hero-overlay" aria-hidden="true"></div>
 	</div>
 
@@ -172,6 +177,31 @@ const initial = (post.title.match(/\S/)?.[0] ?? '?').toUpperCase();
 	</div>
 
 	<script is:inline>
+		(() => {
+			const bar = document.getElementById('reading-progress');
+			if (!bar) return;
+			let ticking = false;
+			const update = () => {
+				const docHeight =
+					document.documentElement.scrollHeight - window.innerHeight;
+				const progress = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
+				bar.style.width = Math.min(100, Math.max(0, progress)) + '%';
+				ticking = false;
+			};
+			update();
+			window.addEventListener(
+				'scroll',
+				() => {
+					if (!ticking) {
+						requestAnimationFrame(update);
+						ticking = true;
+					}
+				},
+				{ passive: true }
+			);
+			window.addEventListener('resize', update, { passive: true });
+		})();
+
 		(async () => {
 			try {
 				const res = await fetch('/api/me');
@@ -222,20 +252,44 @@ const initial = (post.title.match(/\S/)?.[0] ?? '?').toUpperCase();
 
 <style is:global>
 	/* ─── Hero ──────────────────────────────────────────── */
+	.reading-progress {
+		position: fixed;
+		top: 64px;
+		left: 0;
+		width: 0;
+		height: 2px;
+		background: var(--accent);
+		z-index: 40;
+		pointer-events: none;
+		transition: width 100ms linear;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.reading-progress {
+			transition: none;
+		}
+	}
+
 	.post-hero {
 		position: relative;
 		width: 100%;
 		height: 33vh;
 		min-height: 220px;
 		max-height: 380px;
-		background-size: cover;
-		background-position: center;
 		background-color: var(--accent-soft);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		overflow: hidden;
 		margin-bottom: var(--space-10);
+	}
+
+	.post-hero-img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 
 	.post-hero-overlay {
