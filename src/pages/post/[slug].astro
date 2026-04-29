@@ -3,130 +3,115 @@ export const prerender = false;
 
 import { env } from 'cloudflare:workers';
 import { and, eq } from 'drizzle-orm';
+import CommentRoom from '../../components/CommentRoom';
 import { getDb } from '../../db/client';
 import { posts, users } from '../../db/schema';
 import { renderMarkdown } from '../../lib/markdown';
-import { getCachedPost } from '../../lib/post-cache';
-import globalCss from '../../styles/global.css?inline';
+import '../../styles/global.css';
 
 const slug = Astro.params.slug;
 if (!slug) return new Response('Not found', { status: 404 });
 
-function escapeHtml(s: string): string {
-	return s
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#39;');
+const db = getDb(env);
+const rows = await db
+	.select({
+		id: posts.id,
+		slug: posts.slug,
+		title: posts.title,
+		bodyMd: posts.bodyMd,
+		summary: posts.summary,
+		tagsJson: posts.tagsJson,
+		publishedAt: posts.publishedAt,
+		authorId: posts.authorId,
+		authorName: users.name,
+		authorAvatar: users.avatarUrl,
+	})
+	.from(posts)
+	.innerJoin(users, eq(users.id, posts.authorId))
+	.where(and(eq(posts.slug, slug), eq(posts.status, 'published')))
+	.limit(1);
+
+const post = rows[0];
+if (!post) return new Response('Not found', { status: 404 });
+
+const bodyHtml = await renderMarkdown(post.bodyMd);
+
+let tags: string[] = [];
+if (post.tagsJson) {
+	try {
+		const parsed = JSON.parse(post.tagsJson);
+		if (Array.isArray(parsed)) tags = parsed.filter((t): t is string => typeof t === 'string');
+	} catch {
+		tags = [];
+	}
 }
 
-const dateFmt = new Intl.DateTimeFormat('en-US', {
-	month: 'long',
-	day: 'numeric',
-	year: 'numeric',
-});
-
-return await getCachedPost(
-	Astro.request,
-	env,
-	Astro.locals.cfContext,
-	async () => {
-		const db = getDb(env);
-		const rows = await db
-			.select({
-				id: posts.id,
-				slug: posts.slug,
-				title: posts.title,
-				bodyMd: posts.bodyMd,
-				summary: posts.summary,
-				tagsJson: posts.tagsJson,
-				publishedAt: posts.publishedAt,
-				authorId: posts.authorId,
-				authorName: users.name,
-				authorAvatar: users.avatarUrl,
-			})
-			.from(posts)
-			.innerJoin(users, eq(users.id, posts.authorId))
-			.where(and(eq(posts.slug, slug), eq(posts.status, 'published')))
-			.limit(1);
-
-		const post = rows[0];
-		if (!post) return null;
-
-		const bodyHtml = await renderMarkdown(post.bodyMd);
-
-		let tags: string[] = [];
-		if (post.tagsJson) {
-			try {
-				const parsed = JSON.parse(post.tagsJson);
-				if (Array.isArray(parsed)) tags = parsed.filter((t): t is string => typeof t === 'string');
-			} catch {
-				tags = [];
-			}
-		}
-
-		const title = escapeHtml(post.title);
-		const authorName = escapeHtml(post.authorName ?? 'unknown');
-		const avatarTag = post.authorAvatar
-			? `<img class="avatar" src="${escapeHtml(post.authorAvatar)}" alt="" />`
-			: '';
-		const dateText = post.publishedAt ? dateFmt.format(new Date(post.publishedAt)) : '';
-		const summaryBlock = post.summary
-			? `<p class="post-summary">${escapeHtml(post.summary)}</p>`
-			: '';
-		const tagsBlock = tags.length
-			? `<ul class="post-tags">${tags.map((t) => `<li>${escapeHtml(t)}</li>`).join('')}</ul>`
-			: '';
-
-		return `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width" />
-<title>${title} · Verge</title>
-${post.summary ? `<meta name="description" content="${escapeHtml(post.summary)}" />` : ''}
-<style>${globalCss}</style>
-</head>
-<body>
-<header class="site-header">
-	<a href="/" class="brand">Verge</a>
-	<nav><a href="/">Home</a></nav>
-</header>
-<article class="post-article">
-	<header class="post-head">
-		<h1 class="post-title">${title}</h1>
-		<div class="post-meta">
-			${avatarTag}
-			<span class="author-name">${authorName}</span>
-			${dateText ? `<span>·</span><time datetime="${new Date(post.publishedAt ?? 0).toISOString()}">${escapeHtml(dateText)}</time>` : ''}
-		</div>
-	</header>
-	${summaryBlock}
-	<div class="post-body">${bodyHtml}</div>
-	${tagsBlock}
-	<a id="post-edit-link" class="post-edit-link" href="/editor" data-author-id="${escapeHtml(post.authorId)}">Edit this post</a>
-</article>
-<section class="post-comments">
-	<h2>Comments</h2>
-	<div id="comment-room" data-post-id="${escapeHtml(post.id)}">
-		<p style="color: var(--muted); font-size: 14px;">Comments coming soon.</p>
-	</div>
-</section>
-<script>
-(async () => {
-	try {
-		const res = await fetch('/api/me');
-		if (!res.ok) return;
-		const { user } = await res.json();
-		if (!user) return;
-		const link = document.getElementById('post-edit-link');
-		if (link && user.id === link.dataset.authorId) link.classList.add('visible');
-	} catch {}
-})();
-</script>
-</body>
-</html>`;
-	},
-);
+const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+const dateText = post.publishedAt ? dateFmt.format(new Date(post.publishedAt)) : '';
+const isoDate = post.publishedAt ? new Date(post.publishedAt).toISOString() : '';
 ---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>{post.title} · Verge</title>
+		{post.summary && <meta name="description" content={post.summary} />}
+	</head>
+	<body>
+		<header class="site-header">
+			<a href="/" class="brand">Verge</a>
+			<nav><a href="/">Home</a></nav>
+		</header>
+		<article class="post-article">
+			<header class="post-head">
+				<h1 class="post-title">{post.title}</h1>
+				<div class="post-meta">
+					{post.authorAvatar && <img class="avatar" src={post.authorAvatar} alt="" />}
+					<span class="author-name">{post.authorName ?? 'unknown'}</span>
+					{
+						dateText && (
+							<>
+								<span>·</span>
+								<time datetime={isoDate}>{dateText}</time>
+							</>
+						)
+					}
+				</div>
+			</header>
+			{post.summary && <p class="post-summary">{post.summary}</p>}
+			<div class="post-body" set:html={bodyHtml} />
+			{
+				tags.length > 0 && (
+					<ul class="post-tags">
+						{tags.map((t) => <li>{t}</li>)}
+					</ul>
+				)
+			}
+			<a
+				id="post-edit-link"
+				class="post-edit-link"
+				href="/editor"
+				data-author-id={post.authorId}
+			>
+				Edit this post
+			</a>
+		</article>
+		<section class="post-comments">
+			<h2>Comments</h2>
+			<CommentRoom postId={post.id} client:only="react" />
+		</section>
+		<script is:inline>
+			(async () => {
+				try {
+					const res = await fetch('/api/me');
+					if (!res.ok) return;
+					const { user } = await res.json();
+					if (!user) return;
+					const link = document.getElementById('post-edit-link');
+					if (link && user.id === link.dataset.authorId) link.classList.add('visible');
+				} catch {}
+			})();
+		</script>
+	</body>
+</html>

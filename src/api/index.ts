@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { type AuthVariables, authMiddleware } from '../lib/auth';
 import authRoutes from './routes/auth';
 import postsRoutes from './routes/posts';
+import roomRoutes from './routes/room';
 import uploadRoutes from './routes/upload';
 
 export type Bindings = {
@@ -27,5 +28,6 @@ app.get('/api/me', (c) => c.json({ user: c.get('user') }));
 app.route('/api/auth', authRoutes);
 app.route('/api/posts', postsRoutes);
 app.route('/api/upload', uploadRoutes);
+app.route('/api/room', roomRoutes);
 
 export default app;
