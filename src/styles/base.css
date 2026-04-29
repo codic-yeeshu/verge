@@ -1,0 +1,232 @@
+/* ─── Modern CSS reset (Josh Comeau) ─────────────────────── */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+* {
+	margin: 0;
+}
+
+html,
+body {
+	height: 100%;
+}
+
+body {
+	line-height: var(--leading-normal);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+	display: block;
+	max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+	font: inherit;
+	color: inherit;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	overflow-wrap: break-word;
+}
+
+#root,
+#__next {
+	isolation: isolate;
+}
+
+/* ─── App body ───────────────────────────────────────────── */
+
+body {
+	background: var(--bg-canvas);
+	color: var(--ink-1);
+	font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	font-size: var(--text-base);
+	line-height: var(--leading-normal);
+	font-feature-settings: 'cv11', 'ss01';
+	transition: background var(--duration-base) var(--ease-out),
+		color var(--duration-base) var(--ease-out);
+}
+
+/* ─── Typography ─────────────────────────────────────────── */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+	font-weight: 500;
+	letter-spacing: -0.01em;
+	line-height: var(--leading-snug);
+	color: var(--ink-1);
+	font-variation-settings: 'opsz' 36;
+}
+
+h1 {
+	font-size: var(--text-4xl);
+	font-variation-settings: 'opsz' 96;
+	letter-spacing: -0.02em;
+	line-height: var(--leading-tight);
+}
+
+h2 {
+	font-size: var(--text-2xl);
+}
+
+h3 {
+	font-size: var(--text-xl);
+}
+
+h4 {
+	font-size: var(--text-lg);
+	font-variation-settings: 'opsz' 18;
+}
+
+a {
+	color: var(--accent);
+	text-decoration: none;
+	transition: color var(--duration-fast) var(--ease-out);
+}
+
+a:hover {
+	color: var(--accent-hover);
+}
+
+::selection {
+	background: var(--accent-soft);
+	color: var(--accent-ink);
+}
+
+button {
+	cursor: pointer;
+	background: none;
+	border: none;
+	color: inherit;
+	padding: 0;
+}
+
+/* ─── Long-form post body ────────────────────────────────── */
+
+.prose {
+	font-family: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
+	font-size: 19px;
+	line-height: var(--leading-relaxed);
+	max-width: 68ch;
+	color: var(--ink-1);
+	font-variation-settings: 'opsz' 28;
+}
+
+.prose > * + * {
+	margin-top: 1em;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+	font-family: 'Fraunces', Georgia, serif;
+	margin-top: 1.8em;
+	margin-bottom: 0.5em;
+}
+
+.prose h2 {
+	font-size: var(--text-2xl);
+	font-variation-settings: 'opsz' 36;
+}
+
+.prose h3 {
+	font-size: var(--text-xl);
+	font-variation-settings: 'opsz' 24;
+}
+
+.prose h4 {
+	font-size: var(--text-lg);
+}
+
+.prose a {
+	color: var(--accent);
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+}
+
+.prose a:hover {
+	color: var(--accent-hover);
+}
+
+.prose blockquote {
+	border-left: 3px solid var(--border-strong);
+	padding-left: var(--space-5);
+	margin: 1.4em 0;
+	color: var(--ink-2);
+	font-style: italic;
+}
+
+.prose ul,
+.prose ol {
+	padding-left: 1.4em;
+}
+
+.prose li + li {
+	margin-top: 0.4em;
+}
+
+.prose code {
+	font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+	font-size: 0.9em;
+	background: var(--bg-surface-2);
+	color: var(--ink-1);
+	padding: 1px 6px;
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--border-subtle);
+}
+
+.prose pre {
+	font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+	background: var(--bg-surface-2);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	padding: var(--space-4) var(--space-5);
+	overflow-x: auto;
+	font-size: 14px;
+	line-height: 1.55;
+}
+
+.prose pre code {
+	background: none;
+	border: none;
+	padding: 0;
+	font-size: inherit;
+}
+
+.prose img {
+	border-radius: var(--radius-md);
+	margin: 1.6em auto;
+}
+
+.prose hr {
+	border: none;
+	border-top: 1px solid var(--border-subtle);
+	margin: 2.5em 0;
+}

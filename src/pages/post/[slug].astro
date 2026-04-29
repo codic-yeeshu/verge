@@ -5,10 +5,10 @@ import { env } from 'cloudflare:workers';
 import { and, eq } from 'drizzle-orm';
 import CommentRoom from '../../components/CommentRoom';
 import { getDb } from '../../db/client';
+import BaseLayout from '../../layouts/BaseLayout.astro';
 import { posts, users } from '../../db/schema';
 import { renderMarkdown } from '../../lib/markdown';
 import { logEvent } from '../../lib/log';
-import '../../styles/global.css';
 
 const slug = Astro.params.slug;
 if (!slug) return new Response('Not found', { status: 404 });
@@ -55,83 +55,75 @@ const dateText = post.publishedAt ? dateFmt.format(new Date(post.publishedAt)) :
 const isoDate = post.publishedAt ? new Date(post.publishedAt).toISOString() : '';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<title>{post.title} · Verge</title>
-		{post.summary && <meta name="description" content={post.summary} />}
-	</head>
-	<body>
-		<header class="site-header">
-			<a href="/" class="brand">Verge</a>
-			<nav><a href="/">Home</a></nav>
+<BaseLayout title={`${post.title} · Verge`} description={post.summary ?? undefined}>
+	<header class="site-header">
+		<a href="/" class="brand">Verge</a>
+		<nav><a href="/">Home</a></nav>
+	</header>
+	<div id="geo-banner" class="geo-banner geo-banner-post"></div>
+	<article class="post-article">
+		<header class="post-head">
+			<h1 class="post-title">{post.title}</h1>
+			<div class="post-meta">
+				{post.authorAvatar && <img class="avatar" src={post.authorAvatar} alt="" />}
+				<span class="author-name">{post.authorName ?? 'unknown'}</span>
+				{
+					dateText && (
+						<>
+							<span>·</span>
+							<time datetime={isoDate}>{dateText}</time>
+						</>
+					)
+				}
+			</div>
 		</header>
-		<div id="geo-banner" class="geo-banner geo-banner-post"></div>
-		<article class="post-article">
-			<header class="post-head">
-				<h1 class="post-title">{post.title}</h1>
-				<div class="post-meta">
-					{post.authorAvatar && <img class="avatar" src={post.authorAvatar} alt="" />}
-					<span class="author-name">{post.authorName ?? 'unknown'}</span>
-					{
-						dateText && (
-							<>
-								<span>·</span>
-								<time datetime={isoDate}>{dateText}</time>
-							</>
-						)
-					}
-				</div>
-			</header>
-			{post.summary && <p class="post-summary">{post.summary}</p>}
-			<div class="post-body" set:html={bodyHtml} />
-			{
-				tags.length > 0 && (
-					<ul class="post-tags">
-						{tags.map((t) => <li>{t}</li>)}
-					</ul>
-				)
-			}
-			<a
-				id="post-edit-link"
-				class="post-edit-link"
-				href="/editor"
-				data-author-id={post.authorId}
-			>
-				Edit this post
-			</a>
-		</article>
-		<section class="post-comments">
-			<h2>Comments</h2>
-			<CommentRoom postId={post.id} client:only="react" />
-		</section>
-		<script is:inline>
-			(async () => {
-				try {
-					const res = await fetch('/api/me');
-					if (!res.ok) return;
-					const { user } = await res.json();
-					if (!user) return;
-					const link = document.getElementById('post-edit-link');
-					if (link && user.id === link.dataset.authorId) link.classList.add('visible');
-				} catch {}
-			})();
-			(async () => {
-				const banner = document.getElementById('geo-banner');
-				if (!banner) return;
-				try {
-					const res = await fetch('/api/geo');
-					if (!res.ok) return;
-					const { country, city } = await res.json();
-					let where = 'localhost';
-					if (city && country) where = `${city}, ${country}`;
-					else if (country) where = country;
-					else if (city) where = city;
-					banner.textContent = `📍 Reading from ${where}`;
-					banner.classList.add('visible');
-				} catch {}
-			})();
-		</script>
-	</body>
-</html>
+		{post.summary && <p class="post-summary">{post.summary}</p>}
+		<div class="post-body prose" set:html={bodyHtml} />
+		{
+			tags.length > 0 && (
+				<ul class="post-tags">
+					{tags.map((t) => <li>{t}</li>)}
+				</ul>
+			)
+		}
+		<a
+			id="post-edit-link"
+			class="post-edit-link"
+			href="/editor"
+			data-author-id={post.authorId}
+		>
+			Edit this post
+		</a>
+	</article>
+	<section class="post-comments">
+		<h2>Comments</h2>
+		<CommentRoom postId={post.id} client:only="react" />
+	</section>
+	<script is:inline>
+		(async () => {
+			try {
+				const res = await fetch('/api/me');
+				if (!res.ok) return;
+				const { user } = await res.json();
+				if (!user) return;
+				const link = document.getElementById('post-edit-link');
+				if (link && user.id === link.dataset.authorId) link.classList.add('visible');
+			} catch {}
+		})();
+		(async () => {
+			const banner = document.getElementById('geo-banner');
+			if (!banner) return;
+			try {
+				const res = await fetch('/api/geo');
+				if (!res.ok) return;
+				const { country, city } = await res.json();
+				let where = 'localhost';
+				if (city && country) where = `${city}, ${country}`;
+				else if (country) where = country;
+				else if (city) where = city;
+				banner.textContent = `📍 Reading from ${where}`;
+				banner.classList.add('visible');
+			} catch {}
+		})();
+	</script>
+</BaseLayout>

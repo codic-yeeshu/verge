@@ -1,0 +1,142 @@
+/* ─────────────────────────────────────────────────────────────
+   Verge design tokens
+   Light = "warm editorial". Dark = same, after sundown.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+	color-scheme: light;
+
+	/* Type scale */
+	--text-xs: 12px;
+	--text-sm: 14px;
+	--text-base: 16px;
+	--text-lg: 18px;
+	--text-xl: 22px;
+	--text-2xl: 28px;
+	--text-3xl: 36px;
+	--text-4xl: 48px;
+	--text-5xl: 64px;
+
+	/* Line height */
+	--leading-tight: 1.2;
+	--leading-snug: 1.35;
+	--leading-normal: 1.55;
+	--leading-relaxed: 1.75;
+
+	/* Spacing scale (8px base) */
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-5: 20px;
+	--space-6: 24px;
+	--space-8: 32px;
+	--space-10: 40px;
+	--space-12: 48px;
+	--space-16: 64px;
+	--space-20: 80px;
+
+	/* Radii */
+	--radius-sm: 6px;
+	--radius-md: 10px;
+	--radius-lg: 14px;
+	--radius-xl: 20px;
+	--radius-full: 999px;
+	--border-width: 1px;
+
+	/* Motion */
+	--ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+	--ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+	--duration-fast: 120ms;
+	--duration-base: 180ms;
+	--duration-slow: 280ms;
+
+	/* ── Light palette ─────────────────────────────── */
+	--bg-canvas: #faf6ee;
+	--bg-surface: #ffffff;
+	--bg-surface-2: #f4efe3;
+	--bg-elevated: #ffffff;
+
+	--ink-1: #1a1410;
+	--ink-2: #4a3f33;
+	--ink-3: #7a6f60;
+	--ink-4: #b5a993;
+
+	--border-subtle: #ede5d3;
+	--border-strong: #d4c9b0;
+
+	--accent: #b85c2c;
+	--accent-hover: #9a4a22;
+	--accent-soft: #fbe9dd;
+	--accent-ink: #4a1f0e;
+
+	--success: #4f7a3d;
+	--warning: #b89020;
+	--danger: #a8361f;
+
+	/* Shadows */
+	--shadow-sm: 0 1px 2px 0 rgba(26, 20, 16, 0.04);
+	--shadow-md: 0 4px 12px -2px rgba(26, 20, 16, 0.06),
+		0 2px 4px -2px rgba(26, 20, 16, 0.04);
+	--shadow-lg: 0 12px 28px -8px rgba(26, 20, 16, 0.1),
+		0 4px 12px -4px rgba(26, 20, 16, 0.06);
+}
+
+:root[data-theme='dark'] {
+	color-scheme: dark;
+
+	--bg-canvas: #14110d;
+	--bg-surface: #1f1a14;
+	--bg-surface-2: #2a231b;
+	--bg-elevated: #2a231b;
+
+	--ink-1: #f2ebdc;
+	--ink-2: #c9bfa9;
+	--ink-3: #8a7f6b;
+	--ink-4: #54493b;
+
+	--border-subtle: #2d261c;
+	--border-strong: #4a3f30;
+
+	--accent: #e68b5c;
+	--accent-hover: #f0a37d;
+	--accent-soft: #3a1f12;
+	--accent-ink: #fbe9dd;
+
+	--success: #8ab16b;
+	--warning: #dcb94a;
+	--danger: #d9684d;
+
+	--shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+	--shadow-md: 0 4px 14px -2px rgba(0, 0, 0, 0.3),
+		0 2px 6px -2px rgba(0, 0, 0, 0.2);
+	--shadow-lg: 0 16px 32px -10px rgba(0, 0, 0, 0.45),
+		0 8px 16px -6px rgba(0, 0, 0, 0.25);
+}
+
+/* ── Compat aliases ──────────────────────────────────────────
+   Existing component selectors (`.post-card`, `.editor`, `.comment-room`,
+   etc.) reference the older `--bg`, `--surface`, `--text`, `--muted`,
+   `--border`, `--brand`, etc. Map them to the new tokens so the new
+   palette flows through without rewriting every component. These will
+   be retired as components migrate.
+   ────────────────────────────────────────────────────────── */
+
+:root,
+:root[data-theme='dark'] {
+	--bg: var(--bg-canvas);
+	--surface: var(--bg-surface);
+	--text: var(--ink-1);
+	--muted: var(--ink-3);
+	--border: var(--border-subtle);
+
+	--brand: var(--accent);
+	--brand-fg: var(--bg-canvas);
+
+	--info-bg: var(--accent-soft);
+	--info-fg: var(--accent-ink);
+
+	--success-bg: color-mix(in srgb, var(--success) 14%, transparent);
+	--error: var(--danger);
+	--error-bg: color-mix(in srgb, var(--danger) 12%, transparent);
+}

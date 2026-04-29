@@ -1,62 +1,6 @@
-:root {
-	--bg: #f8fafc;
-	--surface: #ffffff;
-	--text: #0f172a;
-	--muted: #64748b;
-	--border: #e2e8f0;
-	--brand: #2563eb;
-	--brand-fg: #ffffff;
-	--success: #10b981;
-	--success-bg: #ecfdf5;
-	--info-bg: #eff6ff;
-	--info-fg: #1d4ed8;
-	--error: #b91c1c;
-	--error-bg: #fef2f2;
-	color-scheme: light dark;
-}
-
-@media (prefers-color-scheme: dark) {
-	:root {
-		--bg: #0b1220;
-		--surface: #111827;
-		--text: #e5e7eb;
-		--muted: #94a3b8;
-		--border: #1f2937;
-		--brand: #60a5fa;
-		--brand-fg: #0b1220;
-		--success: #34d399;
-		--success-bg: rgba(16, 185, 129, 0.12);
-		--info-bg: rgba(96, 165, 250, 0.12);
-		--info-fg: #93c5fd;
-		--error: #f87171;
-		--error-bg: rgba(239, 68, 68, 0.12);
-	}
-}
-
-* {
-	box-sizing: border-box;
-}
-
-html,
-body {
-	margin: 0;
-	padding: 0;
-	background: var(--bg);
-	color: var(--text);
-	font-family:
-		ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-	font-size: 16px;
-	line-height: 1.55;
-}
-
-a {
-	color: var(--brand);
-	text-decoration: none;
-}
-
-a:hover {
-	text-decoration: underline;
-}
+/* Base/reset/typography live in base.css. Tokens live in tokens.css.
+   This file holds the per-component styles (header, posts, editor,
+   comments, etc.) until they migrate to scoped Astro/CSS modules. */
 
 .site-header {
 	display: flex;

@@ -5,7 +5,7 @@ import { env } from 'cloudflare:workers';
 import { desc, eq } from 'drizzle-orm';
 import { getDb } from '../db/client';
 import { posts, users } from '../db/schema';
-import '../styles/global.css';
+import BaseLayout from '../layouts/BaseLayout.astro';
 
 const db = getDb(env);
 const list = await db
@@ -36,15 +36,8 @@ const where = geoLabel(geo);
 const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<title>Verge</title>
-	</head>
-	<body>
-		<header class="site-header">
+<BaseLayout title="Verge">
+	<header class="site-header">
 			<a href="/" class="brand">Verge</a>
 			<nav>
 				{
@@ -132,5 +125,4 @@ const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric
 				});
 			})();
 		</script>
-	</body>
-</html>
+</BaseLayout>

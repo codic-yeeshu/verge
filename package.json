@@ -25,6 +25,7 @@
 		"astro": "^6.1.10",
 		"drizzle-orm": "^0.45.2",
 		"hono": "^4.12.15",
+		"lucide-react": "^1.14.0",
 		"marked": "^18.0.2",
 		"nanoid": "^5.1.9",
 		"react": "^19.2.5",
