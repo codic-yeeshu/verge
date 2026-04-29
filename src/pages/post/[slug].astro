@@ -56,10 +56,6 @@ const isoDate = post.publishedAt ? new Date(post.publishedAt).toISOString() : ''
 ---
 
 <BaseLayout title={`${post.title} · Verge`} description={post.summary ?? undefined}>
-	<header class="site-header">
-		<a href="/" class="brand">Verge</a>
-		<nav><a href="/">Home</a></nav>
-	</header>
 	<div id="geo-banner" class="geo-banner geo-banner-post"></div>
 	<article class="post-article">
 		<header class="post-head">

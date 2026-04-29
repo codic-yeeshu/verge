@@ -1,0 +1,327 @@
+---
+import ThemeToggle from './ThemeToggle';
+import UserMenu, { type MenuUser } from './UserMenu';
+
+const user = Astro.locals.user;
+const menuUser: MenuUser | null = user
+	? { id: user.id, name: user.name, avatarUrl: user.avatarUrl }
+	: null;
+---
+
+<header class="nav-bar">
+	<div class="nav-inner">
+		<a href="/" class="nav-brand" aria-label="Verge home">
+			<span class="nav-brand-mark" aria-hidden="true"></span>
+			<span class="nav-brand-text">Verge</span>
+		</a>
+
+		<div class="nav-search" role="search">
+			<svg
+				class="nav-search-icon"
+				width="16"
+				height="16"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="1.75"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"
+			>
+				<circle cx="11" cy="11" r="8"></circle>
+				<path d="m21 21-4.3-4.3"></path>
+			</svg>
+			<input
+				type="search"
+				class="nav-search-input"
+				placeholder="Search posts…"
+				aria-label="Search posts"
+				disabled
+			/>
+		</div>
+
+		<div class="nav-actions">
+			{
+				menuUser ? (
+					<>
+						<a class="nav-write" href="/editor">Write</a>
+						<ThemeToggle client:load />
+						<UserMenu user={menuUser} client:load />
+					</>
+				) : (
+					<>
+						<a class="nav-signin" href="/api/auth/github">Sign in</a>
+						<a class="nav-write" href="/api/auth/github">Write</a>
+					</>
+				)
+			}
+		</div>
+	</div>
+</header>
+
+<style is:global>
+	.nav-bar {
+		position: sticky;
+		top: 0;
+		z-index: 50;
+		background: var(--bg-canvas);
+		border-bottom: 1px solid var(--border-subtle);
+		height: 64px;
+	}
+
+	.nav-inner {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 var(--space-6);
+		height: 100%;
+		display: flex;
+		align-items: center;
+		gap: var(--space-6);
+	}
+
+	/* ── Brand ──────────────────────────── */
+	.nav-brand {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		color: var(--ink-1);
+		font-family: 'Fraunces', Georgia, serif;
+		font-weight: 600;
+		font-size: 22px;
+		font-variation-settings: 'opsz' 36;
+		letter-spacing: -0.01em;
+		line-height: 1;
+		flex-shrink: 0;
+	}
+
+	.nav-brand:hover {
+		color: var(--ink-1);
+		text-decoration: none;
+	}
+
+	.nav-brand-mark {
+		display: inline-block;
+		width: 8px;
+		height: 8px;
+		background: var(--accent);
+		border-radius: 1px;
+		/* Optical alignment with the cap height of "V" rather than the box */
+		transform: translateY(-2px);
+	}
+
+	.nav-brand-text {
+		display: inline-block;
+	}
+
+	/* ── Search (desktop only) ──────────── */
+	.nav-search {
+		display: none;
+		flex: 1;
+		max-width: 400px;
+		margin: 0 auto;
+		position: relative;
+		height: 36px;
+	}
+
+	@media (min-width: 1024px) {
+		.nav-search {
+			display: block;
+		}
+	}
+
+	.nav-search-icon {
+		position: absolute;
+		left: 12px;
+		top: 50%;
+		transform: translateY(-50%);
+		color: var(--ink-3);
+		pointer-events: none;
+	}
+
+	.nav-search-input {
+		width: 100%;
+		height: 100%;
+		background: var(--bg-surface);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		padding: 0 var(--space-3) 0 36px;
+		color: var(--ink-1);
+		font-family: inherit;
+		font-size: var(--text-sm);
+		transition: border-color var(--duration-fast) var(--ease-out);
+	}
+
+	.nav-search-input::placeholder {
+		color: var(--ink-3);
+	}
+
+	.nav-search-input:disabled {
+		cursor: text;
+	}
+
+	.nav-search-input:focus {
+		outline: none;
+		border-color: var(--border-strong);
+	}
+
+	/* ── Right-hand actions ─────────────── */
+	.nav-actions {
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		flex-shrink: 0;
+	}
+
+	@media (min-width: 1024px) {
+		.nav-actions {
+			margin-left: 0;
+		}
+	}
+
+	.nav-signin {
+		color: var(--ink-2);
+		font-size: var(--text-sm);
+		font-weight: 500;
+		padding: 8px 12px;
+		border-radius: var(--radius-md);
+		transition: color var(--duration-fast) var(--ease-out);
+	}
+
+	.nav-signin:hover {
+		color: var(--ink-1);
+		text-decoration: none;
+	}
+
+	.nav-write {
+		display: inline-flex;
+		align-items: center;
+		background: var(--accent);
+		color: #ffffff;
+		padding: 8px 16px;
+		border-radius: var(--radius-md);
+		font-weight: 500;
+		font-size: var(--text-sm);
+		line-height: 1.2;
+		transition: background var(--duration-fast) var(--ease-out);
+	}
+
+	.nav-write:hover {
+		background: var(--accent-hover);
+		color: #ffffff;
+		text-decoration: none;
+	}
+
+	/* The Nav owns its own theme toggle on logged-in state, so the bottom-right
+     chrome toggle (BaseLayout fallback) is hidden whenever the Nav has one. */
+	.nav-actions .theme-toggle {
+		width: 36px;
+		height: 36px;
+	}
+
+	/* ── User menu ──────────────────────── */
+	.user-menu {
+		position: relative;
+	}
+
+	.user-menu-trigger {
+		width: 32px;
+		height: 32px;
+		border-radius: var(--radius-full);
+		overflow: hidden;
+		padding: 0;
+		background: transparent;
+		border: 1px solid var(--border-subtle);
+		cursor: pointer;
+		transition: border-color var(--duration-fast) var(--ease-out),
+			transform var(--duration-fast) var(--ease-out);
+	}
+
+	.user-menu-trigger:hover {
+		border-color: var(--border-strong);
+	}
+
+	.user-menu-trigger:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+
+	.user-menu-avatar {
+		width: 32px;
+		height: 32px;
+		border-radius: var(--radius-full);
+		display: block;
+		object-fit: cover;
+	}
+
+	.user-menu-avatar-fallback {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--accent-soft);
+		color: var(--accent-ink);
+		font-family: 'Fraunces', Georgia, serif;
+		font-weight: 600;
+		font-size: 16px;
+		line-height: 1;
+		font-variation-settings: 'opsz' 24;
+	}
+
+	.user-menu-popover {
+		position: absolute;
+		top: calc(100% + 8px);
+		right: 0;
+		min-width: 220px;
+		background: var(--bg-elevated);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-lg);
+		padding: var(--space-2);
+		z-index: 60;
+	}
+
+	.user-menu-name {
+		padding: var(--space-2) var(--space-3) var(--space-1);
+		font-size: var(--text-xs);
+		color: var(--ink-3);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+
+	.user-menu-item {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: var(--space-2) var(--space-3);
+		color: var(--ink-1);
+		font-size: var(--text-sm);
+		border-radius: var(--radius-sm);
+		width: 100%;
+		text-align: left;
+		text-decoration: none;
+		transition: background var(--duration-fast) var(--ease-out);
+	}
+
+	.user-menu-item:hover {
+		background: var(--bg-surface-2);
+		color: var(--ink-1);
+		text-decoration: none;
+	}
+
+	.user-menu-item-button {
+		background: none;
+		border: none;
+		font: inherit;
+		cursor: pointer;
+	}
+
+	.user-menu-divider {
+		height: 1px;
+		background: var(--border-subtle);
+		margin: var(--space-2) 0;
+	}
+
+	.user-menu-form {
+		margin: 0;
+	}
+</style>

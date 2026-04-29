@@ -37,24 +37,7 @@ const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric
 ---
 
 <BaseLayout title="Verge">
-	<header class="site-header">
-			<a href="/" class="brand">Verge</a>
-			<nav>
-				{
-					user ? (
-						<>
-							<a href="/editor" class="write">Write a post</a>
-							<form action="/api/auth/logout" method="post" style="display: inline; margin: 0;">
-								<button type="submit" class="signout">Sign out</button>
-							</form>
-						</>
-					) : (
-						<a href="/api/auth/github" class="signin">Sign in with GitHub</a>
-					)
-				}
-			</nav>
-		</header>
-		<main>
+	<main>
 			<div class="geo-banner">📍 Reading from {where}</div>
 			{
 				list.length === 0 ? (

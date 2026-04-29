@@ -11,15 +11,6 @@ if (!user) {
 ---
 
 <BaseLayout title="Write a post · Verge">
-	<header class="site-header">
-		<a href="/" class="brand">Verge</a>
-		<nav>
-			<span style="color: var(--muted); font-size: 14px;">Hi, {user.name}</span>
-			<form action="/api/auth/logout" method="post" style="display: inline; margin: 0;">
-				<button type="submit" class="signout">Sign out</button>
-			</form>
-		</nav>
-	</header>
 	<main>
 		<Editor client:only="react" />
 	</main>
