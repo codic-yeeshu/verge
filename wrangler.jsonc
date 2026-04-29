@@ -5,7 +5,7 @@
 		"nodejs_compat"
 	],
 	"name": "verge",
-	"main": "./src/worker.ts",
+	"main": "./src/worker-shim.ts",
 	"assets": {
 		"directory": "./dist",
 		"binding": "ASSETS"
@@ -40,6 +40,13 @@
 			{
 				"binding": "JOBS",
 				"queue": "verge-jobs"
+			}
+		],
+		"consumers": [
+			{
+				"queue": "verge-jobs",
+				"max_batch_size": 5,
+				"max_batch_timeout": 5
 			}
 		]
 	},
