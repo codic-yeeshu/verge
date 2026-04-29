@@ -1,11 +1,5 @@
 ---
-import ThemeToggle from './ThemeToggle';
-import UserMenu, { type MenuUser } from './UserMenu';
-
-const user = Astro.locals.user;
-const menuUser: MenuUser | null = user
-	? { id: user.id, name: user.name, avatarUrl: user.avatarUrl }
-	: null;
+import NavActions from './NavActions';
 ---
 
 <header class="nav-bar">
@@ -41,20 +35,7 @@ const menuUser: MenuUser | null = user
 		</div>
 
 		<div class="nav-actions">
-			{
-				menuUser ? (
-					<>
-						<a class="nav-write" href="/editor">Write</a>
-						<ThemeToggle client:load />
-						<UserMenu user={menuUser} client:load />
-					</>
-				) : (
-					<>
-						<a class="nav-signin" href="/api/auth/github">Sign in</a>
-						<a class="nav-write" href="/api/auth/github">Write</a>
-					</>
-				)
-			}
+			<NavActions client:load />
 		</div>
 	</div>
 </header>
@@ -217,6 +198,13 @@ const menuUser: MenuUser | null = user
 	.nav-actions .theme-toggle {
 		width: 36px;
 		height: 36px;
+	}
+
+	/* Holds layout while /api/me is in flight on cached pages. */
+	.nav-actions-skeleton {
+		display: inline-block;
+		width: 64px;
+		height: 32px;
 	}
 
 	/* ── User menu ──────────────────────── */

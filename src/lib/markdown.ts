@@ -9,8 +9,26 @@ const sanitizer = unified()
 	.use(rehypeSanitize)
 	.use(rehypeStringify);
 
+// Match `<img ... alt="[caption] some text" ...>` and rewrite to
+// `<figure><img alt="some text"></figure><figcaption>some text</figcaption>`.
+// Order of attributes inside the tag is allowed to vary.
+const captionedImgRe = /<img\b([^>]*?)\salt="\s*\[caption\]\s*([^"]*)"([^>]*?)>/gi;
+
+// Marked wraps standalone images in <p>. Unwrap when the paragraph is just
+// the figure — keeps the DOM tree valid (figure inside p is technically not).
+const figureInParaRe = /<p>(\s*<figure\b[^>]*>[\s\S]*?<\/figure>\s*)<\/p>/g;
+
+function wrapCaptionedImages(html: string): string {
+	const wrapped = html.replace(captionedImgRe, (_match, before, caption, after) => {
+		const cleanedImg = `<img${before} alt="${caption}"${after}>`;
+		return `<figure>${cleanedImg}<figcaption>${caption}</figcaption></figure>`;
+	});
+	return wrapped.replace(figureInParaRe, '$1');
+}
+
 export async function renderMarkdown(md: string): Promise<string> {
 	const rawHtml = marked.parse(md, { async: false }) as string;
-	const file = await sanitizer.process(rawHtml);
+	const withFigures = wrapCaptionedImages(rawHtml);
+	const file = await sanitizer.process(withFigures);
 	return String(file);
 }
