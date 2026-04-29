@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import { type AuthVariables, authMiddleware } from '../lib/auth';
 import authRoutes from './routes/auth';
+import postsRoutes from './routes/posts';
+import uploadRoutes from './routes/upload';
 
 export type Bindings = {
 	DB: D1Database;
@@ -23,5 +25,7 @@ app.get('/api/health', (c) => c.json({ ok: true, time: Date.now() }));
 app.get('/api/me', (c) => c.json({ user: c.get('user') }));
 
 app.route('/api/auth', authRoutes);
+app.route('/api/posts', postsRoutes);
+app.route('/api/upload', uploadRoutes);
 
 export default app;

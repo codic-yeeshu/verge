@@ -7,10 +7,12 @@
   ],
   "exclude": [
     "dist"
-],
-"compilerOptions": {
+  ],
+  "compilerOptions": {
     "types": [
-        "./worker-configuration.d.ts"
-    ]
-}
+      "./worker-configuration.d.ts"
+    ],
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
+  }
 }

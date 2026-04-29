@@ -1,0 +1,32 @@
+---
+import Editor from '../components/Editor';
+import '../styles/global.css';
+
+const user = Astro.locals.user;
+if (!user) {
+	return Astro.redirect('/api/auth/github');
+}
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<title>Write a post · Verge</title>
+	</head>
+	<body>
+		<header class="site-header">
+			<a href="/" class="brand">Verge</a>
+			<nav>
+				<span style="color: var(--muted); font-size: 14px;">Hi, {user.name}</span>
+				<form action="/api/auth/logout" method="post" style="display: inline; margin: 0;">
+					<button type="submit" class="signout">Sign out</button>
+				</form>
+			</nav>
+		</header>
+		<main>
+			<Editor client:only="react" />
+		</main>
+	</body>
+</html>

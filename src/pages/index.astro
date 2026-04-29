@@ -1,17 +1,75 @@
 ---
+import { env } from 'cloudflare:workers';
+import { desc, eq } from 'drizzle-orm';
+import { getDb } from '../db/client';
+import { posts, users } from '../db/schema';
+import '../styles/global.css';
 
+const db = getDb(env);
+const list = await db
+	.select({
+		id: posts.id,
+		slug: posts.slug,
+		title: posts.title,
+		summary: posts.summary,
+		publishedAt: posts.publishedAt,
+		authorName: users.name,
+	})
+	.from(posts)
+	.innerJoin(users, eq(users.id, posts.authorId))
+	.where(eq(posts.status, 'published'))
+	.orderBy(desc(posts.publishedAt))
+	.limit(20);
+
+const user = Astro.locals.user;
+
+const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 ---
 
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
 		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
+		<title>Verge</title>
 	</head>
 	<body>
-		<h1>Astro</h1>
+		<header class="site-header">
+			<a href="/" class="brand">Verge</a>
+			<nav>
+				{
+					user ? (
+						<>
+							<a href="/editor" class="write">Write a post</a>
+							<form action="/api/auth/logout" method="post" style="display: inline; margin: 0;">
+								<button type="submit" class="signout">Sign out</button>
+							</form>
+						</>
+					) : (
+						<a href="/api/auth/github" class="signin">Sign in with GitHub</a>
+					)
+				}
+			</nav>
+		</header>
+		<main>
+			{
+				list.length === 0 ? (
+					<p class="empty">No posts yet. {user ? <a href="/editor">Write the first one →</a> : 'Sign in to write the first one.'}</p>
+				) : (
+					<ul class="posts">
+						{list.map((post) => (
+							<li class="post-card">
+								<h2><a href={`/post/${post.slug}`}>{post.title}</a></h2>
+								{post.summary && <p class="summary">{post.summary}</p>}
+								<div class="meta">
+									by {post.authorName ?? 'unknown'}
+									{post.publishedAt ? ` · ${dateFmt.format(new Date(post.publishedAt))}` : ''}
+								</div>
+							</li>
+						))}
+					</ul>
+				)
+			}
+		</main>
 	</body>
 </html>

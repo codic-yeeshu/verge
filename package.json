@@ -18,15 +18,21 @@
 	},
 	"dependencies": {
 		"@astrojs/cloudflare": "^13.2.2",
+		"@types/react": "^19.2.14",
+		"@types/react-dom": "^19.2.3",
+		"@uiw/react-md-editor": "^4.1.0",
 		"arctic": "^3.7.0",
 		"astro": "^6.1.10",
 		"drizzle-orm": "^0.45.2",
 		"hono": "^4.12.15",
 		"marked": "^18.0.2",
 		"nanoid": "^5.1.9",
+		"react": "^19.2.5",
+		"react-dom": "^19.2.5",
 		"rehype-sanitize": "^6.0.0"
 	},
 	"devDependencies": {
+		"@astrojs/react": "^5.0.4",
 		"@cloudflare/workers-types": "^4.20260426.1",
 		"drizzle-kit": "^0.31.10",
 		"wrangler": "^4.86.0"
