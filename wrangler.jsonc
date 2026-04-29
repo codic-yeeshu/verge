@@ -1,0 +1,63 @@
+{
+	"compatibility_date": "2026-04-29",
+	"compatibility_flags": [
+		"global_fetch_strictly_public",
+		"nodejs_compat"
+	],
+	"name": "verge",
+	"main": "./src/worker.ts",
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "verge-db",
+			"database_id": "ef2f120d-a4c0-4a7b-b3df-48b764c1449f",
+			"remote": true
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "MEDIA",
+			"bucket_name": "verge-media",
+			"remote": true
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "RENDER_CACHE",
+			"id": "29672e2a97d448a6944098e254bc49f8",
+			"remote": true
+		}
+	],
+	"queues": {
+		"producers": [
+			{
+				"binding": "JOBS",
+				"queue": "verge-jobs"
+			}
+		]
+	},
+	"ai": {
+		"binding": "AI"
+	},
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "COMMENTS",
+				"class_name": "CommentRoom"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": ["CommentRoom"]
+		}
+	]
+}
