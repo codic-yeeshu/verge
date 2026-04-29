@@ -1,0 +1,3 @@
+GITHUB_CLIENT_ID=<dev OAuth app client id>
+GITHUB_CLIENT_SECRET=<dev OAuth app client secret>
+RESEND_API_KEY=<optional; newsletter sends are skipped without it>
