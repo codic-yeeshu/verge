@@ -1,0 +1,1 @@
+ALTER TABLE `posts` ADD `comment_count` integer DEFAULT 0 NOT NULL;

@@ -3,9 +3,10 @@ export const prerender = false;
 
 import { env } from 'cloudflare:workers';
 import { desc, eq } from 'drizzle-orm';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
 import { getDb } from '../db/client';
 import { posts, users } from '../db/schema';
-import BaseLayout from '../layouts/BaseLayout.astro';
 
 const db = getDb(env);
 const list = await db
@@ -15,13 +16,18 @@ const list = await db
 		title: posts.title,
 		summary: posts.summary,
 		publishedAt: posts.publishedAt,
+		coverR2Key: posts.coverR2Key,
+		tagsJson: posts.tagsJson,
+		commentCount: posts.commentCount,
+		bodyMd: posts.bodyMd,
 		authorName: users.name,
+		authorAvatar: users.avatarUrl,
 	})
 	.from(posts)
 	.innerJoin(users, eq(users.id, posts.authorId))
 	.where(eq(posts.status, 'published'))
 	.orderBy(desc(posts.publishedAt))
-	.limit(20);
+	.limit(30);
 
 const user = Astro.locals.user;
 const geo = Astro.locals.geo;
@@ -33,79 +39,134 @@ function geoLabel(g: typeof geo): string {
 }
 const where = geoLabel(geo);
 
-const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const firstName = user?.name?.trim().split(/\s+/)[0] ?? null;
+const greeting = firstName ? `Welcome back, ${firstName}` : 'Latest from Verge';
 ---
 
 <BaseLayout title="Verge">
-	<main>
-			<div class="geo-banner">📍 Reading from {where}</div>
-			{
-				list.length === 0 ? (
-					<p class="empty">No posts yet. {user ? <a href="/editor">Write the first one →</a> : 'Sign in to write the first one.'}</p>
-				) : (
-					<ul class="posts">
-						{list.map((post) => (
-							<li class="post-card">
-								<h2><a href={`/post/${post.slug}`}>{post.title}</a></h2>
-								{post.summary && <p class="summary">{post.summary}</p>}
-								<div class="meta">
-									by {post.authorName ?? 'unknown'}
-									{post.publishedAt ? ` · ${dateFmt.format(new Date(post.publishedAt))}` : ''}
-								</div>
-							</li>
-						))}
-					</ul>
-				)
-			}
-		</main>
-		<footer class="site-footer">
-			<form id="subscribe-form" class="subscribe-form">
-				<label for="subscribe-email">Get notified about new posts</label>
-				<div class="subscribe-row">
-					<input
-						id="subscribe-email"
-						type="email"
-						name="email"
-						placeholder="you@example.com"
-						required
-						autocomplete="email"
-					/>
-					<button type="submit">Subscribe</button>
-				</div>
-				<p id="subscribe-status" class="subscribe-status" aria-live="polite"></p>
-			</form>
-		</footer>
-		<script is:inline>
-			(() => {
-				const form = document.getElementById('subscribe-form');
-				const status = document.getElementById('subscribe-status');
-				if (!form || !status) return;
-				form.addEventListener('submit', async (e) => {
-					e.preventDefault();
-					const data = new FormData(form);
-					const email = (data.get('email') ?? '').toString();
-					status.textContent = 'Subscribing…';
-					status.className = 'subscribe-status';
-					try {
-						const res = await fetch('/api/subscribe', {
-							method: 'POST',
-							headers: { 'content-type': 'application/json' },
-							body: JSON.stringify({ email }),
-						});
-						const body = await res.json().catch(() => ({}));
-						if (res.ok) {
-							status.textContent = 'Subscribed. Welcome aboard.';
-							status.className = 'subscribe-status subscribe-status-ok';
-							form.reset();
-						} else {
-							status.textContent = body.error === 'invalid_email' ? 'Please enter a valid email.' : 'Something went wrong.';
-							status.className = 'subscribe-status subscribe-status-err';
-						}
-					} catch {
-						status.textContent = 'Network error. Try again.';
+	<main class="feed">
+		<section class="feed-header">
+			<h1 class="feed-greeting">{greeting}</h1>
+			<p class="feed-subtitle">Reading from {where}</p>
+		</section>
+
+		{
+			list.length === 0 ? (
+				<p class="feed-empty">
+					No posts yet.{' '}
+					{user ? <a href="/editor">Write the first one →</a> : 'Sign in to write the first one.'}
+				</p>
+			) : (
+				<section class="feed-grid">
+					{list.map((post) => <PostCard post={post} />)}
+				</section>
+			)
+		}
+	</main>
+
+	<footer class="site-footer">
+		<form id="subscribe-form" class="subscribe-form">
+			<label for="subscribe-email">Get notified about new posts</label>
+			<div class="subscribe-row">
+				<input
+					id="subscribe-email"
+					type="email"
+					name="email"
+					placeholder="you@example.com"
+					required
+					autocomplete="email"
+				/>
+				<button type="submit">Subscribe</button>
+			</div>
+			<p id="subscribe-status" class="subscribe-status" aria-live="polite"></p>
+		</form>
+	</footer>
+
+	<script is:inline>
+		(() => {
+			const form = document.getElementById('subscribe-form');
+			const status = document.getElementById('subscribe-status');
+			if (!form || !status) return;
+			form.addEventListener('submit', async (e) => {
+				e.preventDefault();
+				const data = new FormData(form);
+				const email = (data.get('email') ?? '').toString();
+				status.textContent = 'Subscribing…';
+				status.className = 'subscribe-status';
+				try {
+					const res = await fetch('/api/subscribe', {
+						method: 'POST',
+						headers: { 'content-type': 'application/json' },
+						body: JSON.stringify({ email }),
+					});
+					const body = await res.json().catch(() => ({}));
+					if (res.ok) {
+						status.textContent = 'Subscribed. Welcome aboard.';
+						status.className = 'subscribe-status subscribe-status-ok';
+						form.reset();
+					} else {
+						status.textContent = body.error === 'invalid_email' ? 'Please enter a valid email.' : 'Something went wrong.';
 						status.className = 'subscribe-status subscribe-status-err';
 					}
-				});
-			})();
-		</script>
+				} catch {
+					status.textContent = 'Network error. Try again.';
+					status.className = 'subscribe-status subscribe-status-err';
+				}
+			});
+		})();
+	</script>
 </BaseLayout>
+
+<style>
+	.feed {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: var(--space-8) var(--space-6) var(--space-12);
+	}
+
+	.feed-header {
+		margin-bottom: var(--space-8);
+	}
+
+	.feed-greeting {
+		font-family: 'Fraunces', Georgia, serif;
+		font-weight: 500;
+		font-size: var(--text-2xl);
+		line-height: var(--leading-snug);
+		letter-spacing: -0.01em;
+		color: var(--ink-1);
+		margin: 0 0 6px;
+		font-variation-settings: 'opsz' 36;
+	}
+
+	.feed-subtitle {
+		margin: 0;
+		font-size: var(--text-sm);
+		color: var(--ink-3);
+	}
+
+	.feed-empty {
+		text-align: center;
+		color: var(--ink-3);
+		padding: var(--space-16) 0;
+		font-size: var(--text-sm);
+	}
+
+	.feed-grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 20px;
+	}
+
+	@media (min-width: 640px) {
+		.feed-grid {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.feed-grid {
+			grid-template-columns: 1fr 1fr 1fr;
+		}
+	}
+</style>

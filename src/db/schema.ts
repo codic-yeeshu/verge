@@ -36,6 +36,7 @@ export const posts = sqliteTable(
 		summary: text('summary'),
 		tagsJson: text('tags_json'),
 		viewCount: integer('view_count').notNull().default(0),
+		commentCount: integer('comment_count').notNull().default(0),
 		createdAt: createdAt(),
 		publishedAt: integer('published_at'),
 	},

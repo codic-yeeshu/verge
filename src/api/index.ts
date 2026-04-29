@@ -4,6 +4,7 @@ import { logEvent } from '../lib/log';
 import authRoutes from './routes/auth';
 import geoRoutes from './routes/geo';
 import postsRoutes from './routes/posts';
+import r2Routes from './routes/r2';
 import roomRoutes from './routes/room';
 import subscribeRoutes from './routes/subscribe';
 import uploadRoutes from './routes/upload';
@@ -36,6 +37,7 @@ app.route('/api/upload', uploadRoutes);
 app.route('/api/room', roomRoutes);
 app.route('/api/geo', geoRoutes);
 app.route('/api/subscribe', subscribeRoutes);
+app.route('/api/r2', r2Routes);
 
 app.onError((err, c) => {
 	logEvent('error', {

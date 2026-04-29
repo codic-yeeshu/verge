@@ -1,8 +1,8 @@
 import { DurableObject } from 'cloudflare:workers';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { getDb } from '../db/client';
-import { comments, users } from '../db/schema';
+import { comments, posts, users } from '../db/schema';
 import { SESSION_COOKIE, validateSession } from '../lib/auth';
 import { logEvent } from '../lib/log';
 
@@ -106,6 +106,10 @@ export class CommentRoom extends DurableObject<Env> {
 				body,
 				createdAt,
 			});
+			await db
+				.update(posts)
+				.set({ commentCount: sql`${posts.commentCount} + 1` })
+				.where(eq(posts.id, postId));
 
 			const comment: PublicComment = {
 				id,
