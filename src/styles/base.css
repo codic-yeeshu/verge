@@ -14,11 +14,6 @@ html {
 	scroll-behavior: smooth;
 }
 
-html,
-body {
-	height: 100%;
-}
-
 /* Single focus ring across every interactive element. The default browser
    outline is suppressed only on mouse focus (:focus, not :focus-visible) so
    keyboard users still see a clear ring. */
