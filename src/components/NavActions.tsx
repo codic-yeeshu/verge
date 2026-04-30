@@ -65,6 +65,7 @@ export default function NavActions() {
 			<a className="nav-write" href="/api/auth/github">
 				Write
 			</a>
+			<ThemeToggle />
 		</>
 	);
 }
