@@ -3,7 +3,7 @@ import { defineMiddleware } from 'astro:middleware';
 import honoApp from './api';
 import { getDb } from './db/client';
 import { SESSION_COOKIE, validateSession } from './lib/auth';
-import { POST_CACHE_CONTROL, defaultCache } from './lib/post-cache';
+import { POST_CACHE_CONTROL, defaultCache, postCacheKey } from './lib/post-cache';
 import type { GeoInfo } from './env';
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -46,15 +46,16 @@ async function cachePostPage(
 	context.locals.user = null;
 
 	const cache = defaultCache();
-	const cached = await cache.match(context.request);
+	const cacheKey = postCacheKey(context.request.url);
+	const cached = await cache.match(cacheKey);
 	if (cached) {
-		console.log('[post-cache] HIT', context.request.url);
+		console.log('[post-cache] HIT', cacheKey.url);
 		const headers = new Headers(cached.headers);
 		headers.set('x-cache', 'HIT');
 		return new Response(cached.body, { status: cached.status, headers });
 	}
 
-	console.log('[post-cache] MISS', context.request.url);
+	console.log('[post-cache] MISS', cacheKey.url);
 	const response = await next();
 	const ct = response.headers.get('content-type') ?? '';
 	if (!response.ok || !ct.includes('text/html')) {
@@ -66,7 +67,7 @@ async function cachePostPage(
 
 	const buffered = new Response(response.body, { status: response.status, headers });
 	const forCache = buffered.clone();
-	context.locals.cfContext.waitUntil(cache.put(context.request, forCache));
+	context.locals.cfContext.waitUntil(cache.put(cacheKey, forCache));
 
 	const clientHeaders = new Headers(headers);
 	clientHeaders.set('x-cache', 'MISS');

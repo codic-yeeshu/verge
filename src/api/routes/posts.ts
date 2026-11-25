@@ -4,6 +4,7 @@ import { nanoid } from 'nanoid';
 import { getDb } from '../../db/client';
 import { posts, users } from '../../db/schema';
 import type { AuthVariables } from '../../lib/auth';
+import { invalidatePostCache } from '../../lib/post-cache';
 import type { Bindings } from '../index';
 
 function slugify(input: string): string {
@@ -85,6 +86,7 @@ app.put('/:id', async (c) => {
 		})
 		.where(eq(posts.id, id));
 
+	await invalidatePostCache(row.slug, new URL(c.req.url).origin);
 	await c.env.JOBS.send({ type: 'process_post', postId: id });
 
 	return c.json({ postId: id, slug: row.slug, status: 'processing' as const }, 202);
@@ -139,6 +141,10 @@ app.get('/:id/status', async (c) => {
 		} catch {
 			tags = null;
 		}
+	}
+
+	if (row.status === 'published') {
+		await invalidatePostCache(row.slug, new URL(c.req.url).origin);
 	}
 
 	return c.json({
