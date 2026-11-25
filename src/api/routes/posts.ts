@@ -52,6 +52,44 @@ app.post('/', async (c) => {
 	return c.json({ postId: id, slug, status: 'processing' as const }, 202);
 });
 
+app.put('/:id', async (c) => {
+	const user = c.get('user');
+	if (!user) return c.json({ error: 'unauthorized' }, 401);
+
+	const id = c.req.param('id');
+	const body = await c.req.json<CreatePostBody>();
+	const title = body.title?.trim();
+	const bodyMd = body.bodyMd?.trim();
+	if (!title || !bodyMd) {
+		return c.json({ error: 'title_and_body_required' }, 400);
+	}
+
+	const db = getDb(c.env);
+	const existing = await db
+		.select({ id: posts.id, slug: posts.slug, authorId: posts.authorId })
+		.from(posts)
+		.where(eq(posts.id, id))
+		.limit(1);
+
+	const row = existing[0];
+	if (!row) return c.json({ error: 'not_found' }, 404);
+	if (row.authorId !== user.id) return c.json({ error: 'forbidden' }, 403);
+
+	await db
+		.update(posts)
+		.set({
+			title,
+			bodyMd,
+			coverR2Key: body.coverR2Key ?? null,
+			status: 'processing',
+		})
+		.where(eq(posts.id, id));
+
+	await c.env.JOBS.send({ type: 'process_post', postId: id });
+
+	return c.json({ postId: id, slug: row.slug, status: 'processing' as const }, 202);
+});
+
 app.get('/', async (c) => {
 	const db = getDb(c.env);
 	const list = await db

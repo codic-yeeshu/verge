@@ -1,18 +1,41 @@
 ---
 export const prerender = false;
 
-import Editor from '../components/Editor';
+import { env } from 'cloudflare:workers';
+import { and, eq } from 'drizzle-orm';
+import Editor, { type EditablePost } from '../components/Editor';
+import { getDb } from '../db/client';
+import { posts } from '../db/schema';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
 const user = Astro.locals.user;
 if (!user) {
 	return Astro.redirect('/api/auth/github');
 }
+
+const editSlug = Astro.url.searchParams.get('edit')?.trim() || null;
+let initialPost: EditablePost | null = null;
+
+if (editSlug) {
+	const db = getDb(env);
+	const rows = await db
+		.select({
+			id: posts.id,
+			slug: posts.slug,
+			title: posts.title,
+			bodyMd: posts.bodyMd,
+			coverR2Key: posts.coverR2Key,
+		})
+		.from(posts)
+		.where(and(eq(posts.slug, editSlug), eq(posts.authorId, user.id)))
+		.limit(1);
+	initialPost = rows[0] ?? null;
+}
 ---
 
-<BaseLayout title="Write a post · Verge">
+<BaseLayout title={initialPost ? `Edit ${initialPost.title} · Verge` : 'Write a post · Verge'}>
 	<main class="editor-page">
-		<Editor client:only="react" />
+		<Editor client:only="react" initialPost={initialPost} />
 	</main>
 </BaseLayout>
 

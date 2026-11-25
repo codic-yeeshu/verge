@@ -137,7 +137,7 @@ const initial = (post.title.match(/\S/)?.[0] ?? '?').toUpperCase();
 					<a
 						id="post-edit-link"
 						class="post-byline-edit"
-						href="/editor"
+						href={`/editor?edit=${encodeURIComponent(post.slug)}`}
 						data-author-id={post.authorId}
 						data-astro-reload
 						data-astro-prefetch="false"

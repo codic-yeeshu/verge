@@ -21,17 +21,28 @@ interface UploadResp {
 	key: string;
 }
 
+export interface EditablePost {
+	id: string;
+	slug: string;
+	title: string;
+	bodyMd: string;
+	coverR2Key: string | null;
+}
+
 const POLL_INTERVAL_MS = 1500;
 const POLL_MAX_ATTEMPTS = 60;
 
-export default function Editor() {
-	const [title, setTitle] = useState('');
-	const [body, setBody] = useState<string | undefined>('');
-	const [coverKey, setCoverKey] = useState<string | null>(null);
-	const [coverPreview, setCoverPreview] = useState<string | null>(null);
+export default function Editor({ initialPost = null }: { initialPost?: EditablePost | null }) {
+	const isEditing = Boolean(initialPost);
+	const [title, setTitle] = useState(initialPost?.title ?? '');
+	const [body, setBody] = useState<string | undefined>(initialPost?.bodyMd ?? '');
+	const [coverKey, setCoverKey] = useState<string | null>(initialPost?.coverR2Key ?? null);
+	const [coverPreview, setCoverPreview] = useState<string | null>(
+		initialPost?.coverR2Key ? `/api/r2/${initialPost.coverR2Key}` : null,
+	);
 	const [coverUploading, setCoverUploading] = useState(false);
 	const [status, setStatus] = useState<Status>('idle');
-	const [slug, setSlug] = useState<string | null>(null);
+	const [slug, setSlug] = useState<string | null>(initialPost?.slug ?? null);
 	const [errorMsg, setErrorMsg] = useState<string | null>(null);
 	const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
@@ -73,8 +84,10 @@ export default function Editor() {
 		setErrorMsg(null);
 		setStatus('saving');
 		try {
-			const res = await fetch('/api/posts', {
-				method: 'POST',
+			const endpoint = initialPost ? `/api/posts/${initialPost.id}` : '/api/posts';
+			const method = initialPost ? 'PUT' : 'POST';
+			const res = await fetch(endpoint, {
+				method,
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({
 					title: title.trim(),
@@ -84,7 +97,7 @@ export default function Editor() {
 			});
 			if (!res.ok) {
 				const text = await res.text();
-				throw new Error(`Create failed (${res.status}): ${text}`);
+				throw new Error(`${isEditing ? 'Update' : 'Create'} failed (${res.status}): ${text}`);
 			}
 			const data = (await res.json()) as CreateResp;
 			setSlug(data.slug);
@@ -92,7 +105,13 @@ export default function Editor() {
 			pollStatus(data.postId);
 		} catch (err) {
 			setStatus('error');
-			setErrorMsg(err instanceof Error ? err.message : 'Failed to create post');
+			setErrorMsg(
+				err instanceof Error
+					? err.message
+					: isEditing
+						? 'Failed to update post'
+						: 'Failed to create post',
+			);
 		}
 	}
 
@@ -127,7 +146,7 @@ export default function Editor() {
 
 	return (
 		<div className="editor-shell">
-			<StatusPill status={status} slug={slug} errorMsg={errorMsg} />
+			<StatusPill status={status} slug={slug} errorMsg={errorMsg} isEditing={isEditing} />
 
 			<input
 				className="editor-title"
@@ -193,7 +212,13 @@ export default function Editor() {
 				onClick={publish}
 				disabled={!canPublish}
 			>
-				{status === 'saving' ? 'Publishing…' : 'Publish'}
+				{status === 'saving'
+					? isEditing
+						? 'Saving…'
+						: 'Publishing…'
+					: isEditing
+						? 'Save changes'
+						: 'Publish'}
 			</button>
 
 			{errorMsg && status === 'error' && <p className="editor-error">{errorMsg}</p>}
@@ -205,13 +230,15 @@ function StatusPill({
 	status,
 	slug,
 	errorMsg,
+	isEditing,
 }: {
 	status: Status;
 	slug: string | null;
 	errorMsg: string | null;
+	isEditing: boolean;
 }) {
 	if (status === 'idle') {
-		return <span className="editor-status editor-status-draft">Draft</span>;
+		return <span className="editor-status editor-status-draft">{isEditing ? 'Editing' : 'Draft'}</span>;
 	}
 	if (status === 'saving' || status === 'processing') {
 		return (
@@ -223,15 +250,19 @@ function StatusPill({
 	}
 	if (status === 'published' && slug) {
 		return (
-			<a className="editor-status editor-status-published" href={`/post/${slug}`}>
-				Published — view post →
+			<a
+				className="editor-status editor-status-published"
+				href={`/post/${slug}`}
+				data-astro-reload
+			>
+				{isEditing ? 'Updated — view post →' : 'Published — view post →'}
 			</a>
 		);
 	}
 	if (status === 'error') {
 		return (
 			<span className="editor-status editor-status-error" title={errorMsg ?? undefined}>
-				Couldn’t publish
+				{isEditing ? 'Couldn’t save' : 'Couldn’t publish'}
 			</span>
 		);
 	}

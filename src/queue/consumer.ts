@@ -7,7 +7,7 @@ import { invalidatePostCache } from '../lib/post-cache';
 
 const LLAMA = '@cf/meta/llama-3.1-8b-instruct-fast';
 const BODY_SNIPPET_CHARS = 2000;
-const SUMMARY_MAX_CHARS = 280;
+const SUMMARY_MAX_CHARS = 420;
 const NEWSLETTER_BATCH = 50;
 const RESEND_FROM = 'Verge <newsletter@verge-mail.yeeshu.dev>';
 
@@ -68,10 +68,11 @@ async function processPost(postId: string, env: Env): Promise<void> {
 
 	const [summary, tags] = await Promise.all([
 		cachedAI<AiResponseShape>(env, LLAMA, {
+			max_tokens: 160,
 			prompt:
-				`Summarize this blog post in 2 sentences, max 280 chars. Output only the summary, no preamble.\n\nPOST: ${snippet}`,
+				`Write a concise 1 to 2 sentence summary of this blog post (under 40 words). Make sure every sentence is complete. Output only the summary text with no preamble or quotes.\n\nPOST: ${snippet}`,
 		})
-			.then((res) => (res.response ?? '').trim().slice(0, SUMMARY_MAX_CHARS) || null)
+			.then((res) => cleanSummary(res.response))
 			.catch((err) => {
 				console.warn('process_post: summary AI failed, continuing without summary', {
 					postId,
@@ -80,6 +81,7 @@ async function processPost(postId: string, env: Env): Promise<void> {
 				return null;
 			}),
 		cachedAI<AiResponseShape>(env, LLAMA, {
+			max_tokens: 100,
 			prompt:
 				`Generate 5 short topic tags for this blog post. Output a JSON array of lowercase strings, nothing else.\n\nPOST: ${snippet}`,
 		})
@@ -93,7 +95,8 @@ async function processPost(postId: string, env: Env): Promise<void> {
 			}),
 	]);
 
-	const publishedAt = Date.now();
+	const isFirstPublish = post.publishedAt === null;
+	const publishedAt = post.publishedAt ?? Date.now();
 	await db
 		.update(posts)
 		.set({
@@ -104,11 +107,13 @@ async function processPost(postId: string, env: Env): Promise<void> {
 		})
 		.where(eq(posts.id, postId));
 
-	logEvent('post_published', { postId, slug: post.slug, publishedAt });
+	logEvent('post_published', { postId, slug: post.slug, publishedAt, isEdit: !isFirstPublish });
 
 	await invalidatePostCache(post.slug, env.PUBLIC_BASE_URL);
 
-	await env.JOBS.send({ type: 'send_newsletter', postId });
+	if (isFirstPublish) {
+		await env.JOBS.send({ type: 'send_newsletter', postId });
+	}
 }
 
 async function sendNewsletter(postId: string, env: Env): Promise<void> {
@@ -214,6 +219,32 @@ function escapeHtml(s: string): string {
 		.replace(/>/g, '&gt;')
 		.replace(/"/g, '&quot;')
 		.replace(/'/g, '&#39;');
+}
+
+function cleanSummary(raw: string | undefined): string | null {
+	if (!raw) return null;
+	let text = raw
+		.replace(/^(?:here(?:'s| is) (?:a |the )?)?summary\s*:\s*/i, '')
+		.replace(/^["“']+|["”']+$/g, '')
+		.replace(/\s+/g, ' ')
+		.trim();
+	if (!text) return null;
+	if (text.length <= SUMMARY_MAX_CHARS) return text;
+
+	// If the model exceeded the limit, trim at the last complete sentence boundary.
+	const within = text.slice(0, SUMMARY_MAX_CHARS);
+	const sentenceEnd = Math.max(
+		within.lastIndexOf('. '),
+		within.lastIndexOf('! '),
+		within.lastIndexOf('? '),
+		/[.!?]$/.test(within) ? within.length - 1 : -1,
+	);
+	if (sentenceEnd >= 60) {
+		return within.slice(0, sentenceEnd + 1).trim();
+	}
+
+	const lastSpace = within.lastIndexOf(' ');
+	return `${(lastSpace > 40 ? within.slice(0, lastSpace) : within).trimEnd()}…`;
 }
 
 function parseTags(raw: string | undefined): string[] {
