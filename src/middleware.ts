@@ -2,7 +2,7 @@ import { env } from 'cloudflare:workers';
 import { defineMiddleware } from 'astro:middleware';
 import honoApp from './api';
 import { getDb } from './db/client';
-import { SESSION_COOKIE, validateSession } from './lib/auth';
+import { SESSION_COOKIE, SESSION_TTL_SECONDS, validateSession } from './lib/auth';
 import { POST_CACHE_CONTROL, defaultCache, postCacheKey } from './lib/post-cache';
 import type { GeoInfo } from './env';
 
@@ -22,6 +22,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	const sessionId = context.cookies.get(SESSION_COOKIE)?.value;
 	if (sessionId) {
 		const result = await validateSession(getDb(env), sessionId);
+		if (result?.renewed) {
+			context.cookies.set(SESSION_COOKIE, sessionId, {
+				httpOnly: true,
+				secure: new URL(context.request.url).protocol === 'https:',
+				sameSite: 'lax',
+				path: '/',
+				maxAge: SESSION_TTL_SECONDS,
+			});
+		}
 		context.locals.user = result?.user ?? null;
 	} else {
 		context.locals.user = null;

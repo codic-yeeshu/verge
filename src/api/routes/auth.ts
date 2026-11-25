@@ -16,7 +16,7 @@ import {
 } from '../../lib/auth';
 import type { Bindings } from '../index';
 
-const STATE_TTL_SECONDS = 60 * 10;
+const STATE_TTL_SECONDS = 60 * 20;
 
 interface GitHubUser {
 	id: number;

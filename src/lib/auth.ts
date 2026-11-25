@@ -9,8 +9,9 @@ import { sessions, users } from '../db/schema';
 export const SESSION_COOKIE = 'verge_session';
 export const OAUTH_STATE_COOKIE = 'verge_oauth_state';
 
-const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
-const SESSION_TTL_SECONDS = SESSION_TTL_MS / 1000;
+const SESSION_TTL_MS = 180 * 24 * 60 * 60 * 1000;
+const SESSION_RENEW_THRESHOLD_MS = SESSION_TTL_MS / 2;
+export const SESSION_TTL_SECONDS = SESSION_TTL_MS / 1000;
 
 export type UserRow = typeof users.$inferSelect;
 export type SessionRow = typeof sessions.$inferSelect;
@@ -37,7 +38,7 @@ export async function createSession(db: Db, userId: string): Promise<string> {
 export async function validateSession(
 	db: Db,
 	sessionId: string,
-): Promise<{ user: UserRow; session: SessionRow } | null> {
+): Promise<{ user: UserRow; session: SessionRow; renewed: boolean } | null> {
 	const rows = await db
 		.select({ user: users, session: sessions })
 		.from(sessions)
@@ -48,12 +49,26 @@ export async function validateSession(
 	const row = rows[0];
 	if (!row) return null;
 
-	if (row.session.expiresAt < Date.now()) {
+	const now = Date.now();
+	if (row.session.expiresAt < now) {
 		await invalidateSession(db, sessionId);
 		return null;
 	}
 
-	return row;
+	if (row.session.expiresAt - now < SESSION_RENEW_THRESHOLD_MS) {
+		const newExpiresAt = now + SESSION_TTL_MS;
+		await db
+			.update(sessions)
+			.set({ expiresAt: newExpiresAt })
+			.where(eq(sessions.id, sessionId));
+		return {
+			user: row.user,
+			session: { ...row.session, expiresAt: newExpiresAt },
+			renewed: true,
+		};
+	}
+
+	return { ...row, renewed: false };
 }
 
 export async function invalidateSession(db: Db, sessionId: string): Promise<void> {
@@ -103,6 +118,10 @@ export const authMiddleware: MiddlewareHandler<{
 		c.set('session', null);
 		clearSessionCookie(c);
 		return next();
+	}
+
+	if (result.renewed) {
+		setSessionCookie(c, sessionId);
 	}
 
 	c.set('user', result.user);
