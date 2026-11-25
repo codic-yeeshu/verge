@@ -2,7 +2,7 @@
 
 An edge-native blogging engine running entirely on Cloudflare's network. No origin server, no central database, no cold starts.
 
-**Live:** https://verge.yeeshu.workers.dev
+**Live:** https://verge.yeeshu.dev
 
 ---
 
