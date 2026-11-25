@@ -6,6 +6,14 @@
 	],
 	"name": "verge",
 	"main": "./src/worker-shim.ts",
+	"workers_dev": false,
+	"preview_urls": false,
+	"routes": [
+		{
+			"pattern": "verge.yeeshu.dev",
+			"custom_domain": true
+		}
+	],
 	"assets": {
 		"directory": "./dist",
 		"binding": "ASSETS"
@@ -14,7 +22,7 @@
 		"enabled": true
 	},
 	"vars": {
-		"PUBLIC_BASE_URL": "https://verge.yeeshu.workers.dev"
+		"PUBLIC_BASE_URL": "https://verge.yeeshu.dev"
 	},
 	"d1_databases": [
 		{

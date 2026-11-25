@@ -47,7 +47,7 @@ export default function NavActions() {
 	if (auth.status === 'user') {
 		return (
 			<>
-				<a className="nav-write" href="/editor">
+				<a className="nav-write" href="/editor" data-astro-prefetch="false">
 					Write
 				</a>
 				<ThemeToggle />
@@ -58,11 +58,21 @@ export default function NavActions() {
 
 	return (
 		<>
-			<a className="nav-github-cta" href="/api/auth/github">
+			<a
+				className="nav-github-cta"
+				href="/api/auth/github"
+				data-astro-reload
+				data-astro-prefetch="false"
+			>
 				<GithubMark size={16} />
 				<span>Continue with GitHub</span>
 			</a>
-			<a className="nav-write" href="/api/auth/github">
+			<a
+				className="nav-write"
+				href="/api/auth/github"
+				data-astro-reload
+				data-astro-prefetch="false"
+			>
 				Write
 			</a>
 			<ThemeToggle />

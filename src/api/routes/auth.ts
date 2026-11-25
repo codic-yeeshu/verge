@@ -35,6 +35,7 @@ interface GitHubEmail {
 const auth = new Hono<{ Bindings: Bindings; Variables: AuthVariables }>();
 
 auth.get('/github', (c) => {
+	c.header('Cache-Control', 'no-store');
 	const github = createGitHubProvider(c.env);
 	const state = generateState();
 	const url = github.createAuthorizationURL(state, ['read:user', 'user:email']);
@@ -51,6 +52,7 @@ auth.get('/github', (c) => {
 });
 
 auth.get('/github/callback', async (c) => {
+	c.header('Cache-Control', 'no-store');
 	const code = c.req.query('code');
 	const state = c.req.query('state');
 	const storedState = getCookie(c, OAUTH_STATE_COOKIE);

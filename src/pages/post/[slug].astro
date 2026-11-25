@@ -139,6 +139,8 @@ const initial = (post.title.match(/\S/)?.[0] ?? '?').toUpperCase();
 						class="post-byline-edit"
 						href="/editor"
 						data-author-id={post.authorId}
+						data-astro-reload
+						data-astro-prefetch="false"
 					>
 						Edit
 					</a>

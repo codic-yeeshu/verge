@@ -72,7 +72,7 @@ const greeting = firstName ? `Welcome back, ${firstName}` : 'Latest from Verge';
 				<section class="feed-empty">
 					<p class="feed-empty-mark" aria-hidden="true">—</p>
 					<p class="feed-empty-line">No posts yet. Be the first.</p>
-					<a href="/editor" class="feed-empty-cta">Write</a>
+					<a href="/editor" class="feed-empty-cta" data-astro-reload data-astro-prefetch="false">Write</a>
 				</section>
 			) : (
 				<section class="feed-grid">

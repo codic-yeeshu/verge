@@ -223,7 +223,10 @@ export default function DiscussionRail({ postId }: { postId: string }) {
 					</form>
 				) : (
 					<p className="rail-signin">
-						<a href="/api/auth/github">Sign in</a> to join the discussion.
+						<a href="/api/auth/github" data-astro-reload data-astro-prefetch="false">
+							Sign in
+						</a>{' '}
+						to join the discussion.
 					</p>
 				)}
 			</div>
