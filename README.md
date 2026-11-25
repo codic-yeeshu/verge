@@ -22,7 +22,7 @@ A complete, end-to-end blogging platform. Specifically:
 - **GitHub OAuth sign-in** via `arctic`, with sessions stored in D1 and cookies set with the right `Secure` / `SameSite=Lax` attributes for production.
 - **Markdown editor with live preview** (`@uiw/react-md-editor` as an Astro island) — title, cover image upload, and a Publish button that returns a 202 Accepted in under 50ms.
 - **Asynchronous publish pipeline.** Hitting Publish enqueues a `process_post` job; the queue consumer then, in parallel:
-  - generates a 2-sentence summary via `@cf/meta/llama-3.1-8b-instruct` on the Workers AI binding
+  - generates a 2-sentence summary via `@cf/meta/llama-3.1-8b-instruct-fast` on the Workers AI binding
   - generates 5 topic tags from the same model
   - flips the post status from `processing` to `published`
   - invalidates the edge cache for the post URL
@@ -56,7 +56,7 @@ Each piece was picked for a specific reason.
 - **R2** — zero-egress object storage. *Cover images served via Cloudflare's CDN at no per-byte cost.*
 - **Durable Objects** — single-writer global actors with hibernatable WebSockets. *One instance per `idFromName(postId)` gives ordered, presence-aware comment rooms for free.*
 - **Queues** — decouple write latency from total work. *Publish returns in <50ms; AI, newsletter, and cache invalidation run downstream.*
-- **Workers AI** — `@cf/meta/llama-3.1-8b-instruct` via the `AI` binding. *No API key, no separate inference cost; results are SHA-cached in KV with 24h TTL.*
+- **Workers AI** — `@cf/meta/llama-3.1-8b-instruct-fast` via the `AI` binding. *No API key, no separate inference cost; results are SHA-cached in KV with 24h TTL.*
 - **Cache API** — per-POP edge cache with explicit invalidation. *First read in a colo populates; queue consumer purges after publish.*
 
 ## The async write path

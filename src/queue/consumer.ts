@@ -5,7 +5,7 @@ import { cachedAI } from '../lib/ai-cache';
 import { logEvent } from '../lib/log';
 import { invalidatePostCache } from '../lib/post-cache';
 
-const LLAMA = '@cf/meta/llama-3.1-8b-instruct';
+const LLAMA = '@cf/meta/llama-3.1-8b-instruct-fast';
 const BODY_SNIPPET_CHARS = 2000;
 const SUMMARY_MAX_CHARS = 280;
 const NEWSLETTER_BATCH = 50;
@@ -66,17 +66,32 @@ async function processPost(postId: string, env: Env): Promise<void> {
 
 	const snippet = post.bodyMd.slice(0, BODY_SNIPPET_CHARS);
 
-	const summaryRes = await cachedAI<AiResponseShape>(env, LLAMA, {
-		prompt:
-			`Summarize this blog post in 2 sentences, max 280 chars. Output only the summary, no preamble.\n\nPOST: ${snippet}`,
-	});
-	const summary = (summaryRes.response ?? '').trim().slice(0, SUMMARY_MAX_CHARS);
-
-	const tagsRes = await cachedAI<AiResponseShape>(env, LLAMA, {
-		prompt:
-			`Generate 5 short topic tags for this blog post. Output a JSON array of lowercase strings, nothing else.\n\nPOST: ${snippet}`,
-	});
-	const tags = parseTags(tagsRes.response);
+	const [summary, tags] = await Promise.all([
+		cachedAI<AiResponseShape>(env, LLAMA, {
+			prompt:
+				`Summarize this blog post in 2 sentences, max 280 chars. Output only the summary, no preamble.\n\nPOST: ${snippet}`,
+		})
+			.then((res) => (res.response ?? '').trim().slice(0, SUMMARY_MAX_CHARS) || null)
+			.catch((err) => {
+				console.warn('process_post: summary AI failed, continuing without summary', {
+					postId,
+					error: err instanceof Error ? err.message : String(err),
+				});
+				return null;
+			}),
+		cachedAI<AiResponseShape>(env, LLAMA, {
+			prompt:
+				`Generate 5 short topic tags for this blog post. Output a JSON array of lowercase strings, nothing else.\n\nPOST: ${snippet}`,
+		})
+			.then((res) => parseTags(res.response))
+			.catch((err) => {
+				console.warn('process_post: tags AI failed, continuing without tags', {
+					postId,
+					error: err instanceof Error ? err.message : String(err),
+				});
+				return [] as string[];
+			}),
+	]);
 
 	const publishedAt = Date.now();
 	await db

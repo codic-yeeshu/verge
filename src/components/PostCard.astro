@@ -46,6 +46,19 @@ const initial = (post.title.match(/\S/)?.[0] ?? '?').toUpperCase();
 // Direct R2 proxy. `/cdn-cgi/image/...` resizing is a custom-domain + paid
 // Image Resizing feature; revisit once that's wired up.
 const coverSrc = post.coverR2Key ? `/api/r2/${post.coverR2Key}` : null;
+
+function fallbackExcerpt(md: string): string {
+	const plain = md
+		.replace(/```[\s\S]*?```/g, ' ')
+		.replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+		.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+		.replace(/[#>*_`~-]+/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim();
+	return plain.length > 180 ? `${plain.slice(0, 177).trimEnd()}…` : plain;
+}
+
+const cardSummary = post.summary?.trim() || fallbackExcerpt(post.bodyMd);
 ---
 
 <a class="post-card-v2" href={`/post/${post.slug}`}>
@@ -76,7 +89,7 @@ const coverSrc = post.coverR2Key ? `/api/r2/${post.coverR2Key}` : null;
 			)
 		}
 		<h3 class="post-card-title">{post.title}</h3>
-		{post.summary && <p class="post-card-summary">{post.summary}</p>}
+		{cardSummary && <p class="post-card-summary">{cardSummary}</p>}
 
 		<div class="post-card-footer">
 			<div class="post-card-meta">
